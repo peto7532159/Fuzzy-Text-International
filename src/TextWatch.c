@@ -7,9 +7,9 @@
 #define DEBUG 0
 #define BUFFER_SIZE 44
 
-#define MY_UUID { 0x49, 0x6E, 0x04, 0xAD, 0x13, 0x2A, 0x48, 0xAB, 0xB1, 0x65, 0x7F, 0xF4, 0xA9, 0x98, 0x72, 0xD2 }
+#define MY_UUID { 0x46, 0x6E, 0x04, 0xAD, 0x13, 0x2A, 0x48, 0xAB, 0xB1, 0x65, 0x7F, 0xF4, 0xA9, 0x98, 0x72, 0xD2 }
 PBL_APP_INFO(MY_UUID,
-             "TextWatch", "Wip Interactive",
+             "SE Fuzzy Text", "Wip Interactive",
              1, 0,
              DEFAULT_MENU_ICON,
 #if DEBUG
@@ -222,8 +222,8 @@ void handle_init(AppContextRef ctx) {
 	// 1st line layers
 	text_layer_init(&line1.currentLayer, GRect(0, 18, 144, 50));
 	text_layer_init(&line1.nextLayer, GRect(144, 18, 144, 50));
-	configureBoldLayer(&line1.currentLayer);
-	configureBoldLayer(&line1.nextLayer);
+	configureLightLayer(&line1.currentLayer);
+	configureLightLayer(&line1.nextLayer);
 
 	// 2nd layers
 	text_layer_init(&line2.currentLayer, GRect(0, 55, 144, 50));
@@ -234,8 +234,8 @@ void handle_init(AppContextRef ctx) {
 	// 3rd layers
 	text_layer_init(&line3.currentLayer, GRect(0, 92, 144, 50));
 	text_layer_init(&line3.nextLayer, GRect(144, 92, 144, 50));
-	configureLightLayer(&line3.currentLayer);
-	configureLightLayer(&line3.nextLayer);
+	configureBoldLayer(&line3.currentLayer);
+	configureBoldLayer(&line3.nextLayer);
 
 	// Configure time on init
 	get_time(&t);
