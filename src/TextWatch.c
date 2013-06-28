@@ -7,9 +7,15 @@
 #define DEBUG 0
 #define BUFFER_SIZE 44
 
+#if DEBUG
+	#define WATCH_TITLE "SE Fuzzy Text Db" 
+#else
+	#define WATCH_TITLE "SE Fuzzy Text " 
+#endif
+
 #define MY_UUID { 0x46, 0x6E, 0x04, 0xAD, 0x13, 0x2A, 0x48, 0xAB, 0xB1, 0x65, 0x7F, 0xF4, 0xA9, 0x98, 0x72, 0xD2 }
 PBL_APP_INFO(MY_UUID,
-             "SE Fuzzy Text", "Wip Interactive",
+             WATCH_TITLE, "Wip Interactive",
              1, 0,
              DEFAULT_MENU_ICON,
 #if DEBUG
@@ -111,6 +117,24 @@ bool needToUpdateLine(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue)
 	return false;
 }
 
+// Configure bold line of text
+void configureBoldLayer(TextLayer *textlayer)
+{
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_BOLD));
+	text_layer_set_text_color(textlayer, GColorWhite);
+	text_layer_set_background_color(textlayer, GColorClear);
+	text_layer_set_text_alignment(textlayer, GTextAlignmentCenter);
+}
+
+// Configure light line of text
+void configureLightLayer(TextLayer *textlayer)
+{
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_LIGHT));
+	text_layer_set_text_color(textlayer, GColorWhite);
+	text_layer_set_background_color(textlayer, GColorClear);
+	text_layer_set_text_alignment(textlayer, GTextAlignmentCenter);
+}
+
 // Update screen based on new time
 void display_time(PblTm *t)
 {
@@ -121,6 +145,20 @@ void display_time(PblTm *t)
 	
 	time_to_3words(t->tm_hour, t->tm_min, textLine1, textLine2, textLine3, BUFFER_SIZE);
 	
+	// Set bold layer.
+	if (strlen(textLine3) > 0) {
+		configureLightLayer(&line1.nextLayer);
+		configureLightLayer(&line2.nextLayer);
+		configureBoldLayer(&line3.nextLayer);
+	}
+	else if (strlen(textLine2) > 0) {
+		configureLightLayer(&line1.nextLayer);
+		configureBoldLayer(&line2.nextLayer);
+	} else
+	{
+		configureBoldLayer(&line1.nextLayer);
+	}
+
 	if (needToUpdateLine(&line1, line1Str, textLine1)) {
 		updateLineTo(&line1, line1Str, textLine1);	
 	}
@@ -142,26 +180,6 @@ void display_initial_time(PblTm *t)
 	text_layer_set_text(&line3.currentLayer, line3Str[0]);
 }
 
-
-// Configure the first line of text
-void configureBoldLayer(TextLayer *textlayer)
-{
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_BOLD));
-	text_layer_set_text_color(textlayer, GColorWhite);
-	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
-}
-
-// Configure for the 2nd and 3rd lines
-void configureLightLayer(TextLayer *textlayer)
-{
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_LIGHT));
-	text_layer_set_text_color(textlayer, GColorWhite);
-	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, GTextAlignmentLeft);
-}
-
-
 /** 
  * Debug methods. For quickly debugging enable debug macro on top to transform the watchface into
  * a standard app and you will be able to change the time with the up and down buttons
@@ -172,7 +190,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
-	t.tm_min += 1;
+	t.tm_min += 5;
 	if (t.tm_min >= 60) {
 		t.tm_min = 0;
 		t.tm_hour += 1;
@@ -189,10 +207,14 @@ void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
-	t.tm_min -= 1;
+	t.tm_min -= 5;
 	if (t.tm_min < 0) {
-		t.tm_min = 59;
+		t.tm_min = 55;
 		t.tm_hour -= 1;
+		
+		if (t.tm_hour < 0) {
+			t.tm_hour = 23;
+		}
 	}
 	display_time(&t);
 }
