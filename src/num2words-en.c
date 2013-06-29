@@ -1,8 +1,9 @@
 #include "num2words-en.h"
 #include "string.h"
+//#include <stdio.h>
 
 static const char* const ONES[] = {
-  "",
+  "noll",
   "ett",
   "två",
   "tre",
@@ -15,7 +16,7 @@ static const char* const ONES[] = {
 };
 
 static const char* const TEENS[] ={
-  "",
+  "-",
   "elva",
   "tolv",
   "tretton",
@@ -40,12 +41,13 @@ static const char* const TENS[] = {
   "nittio"
 };
 
-static const char* QUARTER = "kvart";
-static const char* HALF = "halv";
+#define QUARTER "kvart"
+#define HALF "halv"
 
-static const char* PAST = "över";
-static const char* TO = "i";
+#define PAST "över"
+#define TO "i"
 
+#define MAX_LEN 7
 
 static size_t append_number(char* words, int num) {
   int tens_val = num / 10 % 10;
@@ -66,6 +68,14 @@ static size_t append_number(char* words, int num) {
     strcat(words, ONES[ones_val]);
     len += strlen(ONES[ones_val]);
   }
+
+  if (len > MAX_LEN)
+  {
+    int fullSize = strlen(words);
+    words[fullSize - (len - MAX_LEN)] = 0;
+    len = MAX_LEN;
+  }
+
   return len;
 }
 
@@ -134,18 +144,14 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
   remaining = append_string(words, remaining, " ");
 
   // Handle hour wrapping
+  hours += 12; // If hours == 0
   while (hours > 12)
   {
     hours -= 12;
   }
 
-  if (hours == 0 || hours == 12) {
-    remaining -= append_string(words, remaining, TEENS[2]);
-  } else {
-    remaining -= append_number(words, hours);
-  }
-
-  remaining = append_string(words, remaining, " ");
+  remaining -= append_number(words, hours);
+  remaining -= append_string(words, remaining, " ");
 }
 
 void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3, size_t length)
@@ -171,12 +177,4 @@ void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line
 		pch = strstr(start, " ");
 	}
 	
-	// Truncate long teen values
-	// if (strlen(line2) > 7) {
-	// 	char *pch = strstr(line2, "teen");
-	// 	if (pch) {
-	// 		memcpy(line3, pch, 4);
-	// 		pch[0] = 0;
-	// 	}
-	// }
 }
