@@ -4,7 +4,7 @@
 
 #include "num2words-en.h"
 
-#define DEBUG 0
+#define DEBUG 1
 #define BUFFER_SIZE 44
 
 #if DEBUG
@@ -28,10 +28,12 @@ PBL_APP_INFO(MY_UUID,
 Window window;
 
 typedef struct {
-	TextLayer currentLayer;
-	TextLayer nextLayer;	
-	PropertyAnimation currentAnimation;
-	PropertyAnimation nextAnimation;
+	TextLayer layer1;
+	TextLayer layer2;	
+	PropertyAnimation animation1;
+	PropertyAnimation animation2;
+	TextLayer *currentLayer;
+	TextLayer *nextLayer;
 } Line;
 
 Line line1;
@@ -56,28 +58,28 @@ void animationStoppedHandler(struct Animation *animation, bool finished, void *c
 }
 
 // Animate line
-void makeAnimationsForLayers(Line *line, TextLayer *current, TextLayer *next)
+void makeAnimationsForLayer(Line *line, TextLayer *current, TextLayer *next)
 {
 	GRect rect = layer_get_frame(&next->layer);
 	rect.origin.x -= 144;
 	
-	property_animation_init_layer_frame(&line->nextAnimation, &next->layer, NULL, &rect);
-	animation_set_duration(&line->nextAnimation.animation, 400);
-	animation_set_curve(&line->nextAnimation.animation, AnimationCurveEaseOut);
-	animation_schedule(&line->nextAnimation.animation);
+	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect);
+	animation_set_duration(&line->animation2.animation, 400);
+	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut);
+	animation_schedule(&line->animation2.animation);
 	
 	GRect rect2 = layer_get_frame(&current->layer);
 	rect2.origin.x -= 144;
 	
-	property_animation_init_layer_frame(&line->currentAnimation, &current->layer, NULL, &rect2);
-	animation_set_duration(&line->currentAnimation.animation, 400);
-	animation_set_curve(&line->currentAnimation.animation, AnimationCurveEaseOut);
+	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect2);
+	animation_set_duration(&line->animation1.animation, 400);
+	animation_set_curve(&line->animation1.animation, AnimationCurveEaseOut);
 	
-	animation_set_handlers(&line->currentAnimation.animation, (AnimationHandlers) {
+	animation_set_handlers(&line->animation1.animation, (AnimationHandlers) {
 		.stopped = (AnimationStoppedHandler)animationStoppedHandler
 	}, current);
 	
-	animation_schedule(&line->currentAnimation.animation);
+	animation_schedule(&line->animation1.animation);
 }
 
 // Update line
@@ -85,12 +87,12 @@ void updateLineTo(Line *line, char lineStr[2][BUFFER_SIZE], char *value)
 {
 	TextLayer *next, *current;
 	
-	GRect rect = layer_get_frame(&line->currentLayer.layer);
-	current = (rect.origin.x == 0) ? &line->currentLayer : &line->nextLayer;
-	next = (current == &line->currentLayer) ? &line->nextLayer : &line->currentLayer;
+	GRect rect = layer_get_frame(&line->currentLayer->layer);
+	current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
+	next = (current == line->currentLayer) ? line->nextLayer : line->currentLayer;
 	
 	// Update correct text only
-	if (current == &line->currentLayer) {
+	if (current == line->currentLayer) {
 		memset(lineStr[1], 0, BUFFER_SIZE);
 		memcpy(lineStr[1], value, strlen(value));
 		text_layer_set_text(next, lineStr[1]);
@@ -100,14 +102,14 @@ void updateLineTo(Line *line, char lineStr[2][BUFFER_SIZE], char *value)
 		text_layer_set_text(next, lineStr[0]);
 	}
 	
-	makeAnimationsForLayers(line, current, next);
+	makeAnimationsForLayer(line, current, next);
 }
 
 // Check to see if the current line needs to be updated
 bool needToUpdateLine(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue)
 {
 	char *currentStr;
-	GRect rect = layer_get_frame(&line->currentLayer.layer);
+	GRect rect = layer_get_frame(&line->currentLayer->layer);
 	currentStr = (rect.origin.x == 0) ? lineStr[0] : lineStr[1];
 
 	if (memcmp(currentStr, nextValue, strlen(nextValue)) != 0 ||
@@ -147,16 +149,16 @@ void display_time(PblTm *t)
 	
 	// Set bold layer.
 	if (strlen(textLine3) > 0) {
-		configureLightLayer(&line1.nextLayer);
-		configureLightLayer(&line2.nextLayer);
-		configureBoldLayer(&line3.nextLayer);
+		configureLightLayer(line1.nextLayer);
+		configureLightLayer(line2.nextLayer);
+		configureBoldLayer(line3.nextLayer);
 	}
 	else if (strlen(textLine2) > 0) {
-		configureLightLayer(&line1.nextLayer);
-		configureBoldLayer(&line2.nextLayer);
+		configureLightLayer(line1.nextLayer);
+		configureBoldLayer(line2.nextLayer);
 	} else
 	{
-		configureBoldLayer(&line1.nextLayer);
+		configureBoldLayer(line1.nextLayer);
 	}
 
 	if (needToUpdateLine(&line1, line1Str, textLine1)) {
@@ -175,9 +177,9 @@ void display_initial_time(PblTm *t)
 {
 	time_to_3words(t->tm_hour, t->tm_min, line1Str[0], line2Str[0], line3Str[0], BUFFER_SIZE);
 	
-	text_layer_set_text(&line1.currentLayer, line1Str[0]);
-	text_layer_set_text(&line2.currentLayer, line2Str[0]);
-	text_layer_set_text(&line3.currentLayer, line3Str[0]);
+	text_layer_set_text(line1.currentLayer, line1Str[0]);
+	text_layer_set_text(line2.currentLayer, line2Str[0]);
+	text_layer_set_text(line3.currentLayer, line3Str[0]);
 }
 
 /** 
@@ -242,34 +244,39 @@ void handle_init(AppContextRef ctx) {
 	resource_init_current_app(&APP_RESOURCES);
 	
 	// 1st line layers
-	text_layer_init(&line1.currentLayer, GRect(0, 18, 144, 50));
-	text_layer_init(&line1.nextLayer, GRect(144, 18, 144, 50));
-	configureLightLayer(&line1.currentLayer);
-	configureLightLayer(&line1.nextLayer);
+	text_layer_init(&line1.layer1, GRect(0, 18, 144, 50));
+	text_layer_init(&line1.layer2, GRect(144, 18, 144, 50));
+	line1.currentLayer = &line1.layer1;
+	line1.nextLayer = &line1.layer2;
+	configureLightLayer(&line1.layer1);
+	configureLightLayer(&line1.layer2);
 
 	// 2nd layers
-	text_layer_init(&line2.currentLayer, GRect(0, 55, 144, 50));
-	text_layer_init(&line2.nextLayer, GRect(144, 55, 144, 50));
-	configureLightLayer(&line2.currentLayer);
-	configureLightLayer(&line2.nextLayer);
+	text_layer_init(&line2.layer1, GRect(0, 55, 144, 50));
+	text_layer_init(&line2.layer2, GRect(144, 55, 144, 50));
+	line2.currentLayer = &line2.layer1;
+	line2.nextLayer = &line2.layer2;
+	configureLightLayer(&line2.layer1);
+	configureLightLayer(&line2.layer2);
 
 	// 3rd layers
-	text_layer_init(&line3.currentLayer, GRect(0, 92, 144, 50));
-	text_layer_init(&line3.nextLayer, GRect(144, 92, 144, 50));
-	configureBoldLayer(&line3.currentLayer);
-	configureBoldLayer(&line3.nextLayer);
+	text_layer_init(&line3.layer1, GRect(0, 92, 144, 50));
+	text_layer_init(&line3.layer2, GRect(144, 92, 144, 50));
+	line3.currentLayer = &line3.layer1;
+	line3.nextLayer = &line3.layer2;	configureBoldLayer(&line3.layer1);
+	configureBoldLayer(&line3.layer2);
 
 	// Configure time on init
 	get_time(&t);
 	display_initial_time(&t);
 	
 	// Load layers
-  	layer_add_child(&window.layer, &line1.currentLayer.layer);
-	layer_add_child(&window.layer, &line1.nextLayer.layer);
-	layer_add_child(&window.layer, &line2.currentLayer.layer);
-	layer_add_child(&window.layer, &line2.nextLayer.layer);
-	layer_add_child(&window.layer, &line3.currentLayer.layer);
-	layer_add_child(&window.layer, &line3.nextLayer.layer);
+  	layer_add_child(&window.layer, &line1.layer1.layer);
+	layer_add_child(&window.layer, &line1.layer2.layer);
+	layer_add_child(&window.layer, &line2.layer1.layer);
+	layer_add_child(&window.layer, &line2.layer2.layer);
+	layer_add_child(&window.layer, &line3.layer1.layer);
+	layer_add_child(&window.layer, &line3.layer2.layer);
 	
 #if DEBUG
 	// Button functionality
