@@ -1,15 +1,11 @@
-Pebble Text Watch
-=================
+Swedish fuzzy text watch
+========================
 
-On the first launch of Pebble SDK, TextWatch application was not part of the code examples.
-Many people wanted to change the texts into their own language and with this app we hope that others will improve it 
-and translate it into many more languages.
+This watchface is based on the PebbleTextWatch by waerewip (https://github.com/wearewip/PebbleTextWatch)
 
-A video with the text changing animation can be found here: http://www.youtube.com/watch?v=vVTCtfZ-GsU
+I wanted to combine the elegant layout and animations of the TextWatch with the natural language of
+the Fuzzy Time watchface and I wanted it in my native language, Swedish.
 
-Compiled build: http://c.wip.ro/0t0i0J172R2Q
+The current version is mostly working. I have done some rather extensive refactoring of the data structures
+to more easily accomodate four lines of text. 
 
-Romanian language source code available in the textRO branch: https://github.com/wearewip/PebbleTextWatch/tree/textRO
-
-Screenshot:  
-![Text watch screenshot](http://c.wip.ro/image/221C402K3y0t/photo.JPG)
