@@ -4,11 +4,15 @@
 
 #include "num2words-en.h"
 
-#define DEBUG 1
+#define DEBUG 0
+
+#define NUM_LINES 3
 #define BUFFER_SIZE 44
+#define ROW_HEIGHT 37
+#define TOP_MARGIN 10
 
 #if DEBUG
-	#define WATCH_TITLE "SE Fuzzy Text Db" 
+	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
 #else
 	#define WATCH_TITLE "SE Fuzzy Text " 
 #endif
@@ -30,23 +34,20 @@ Window window;
 typedef struct {
 	TextLayer layer1;
 	TextLayer layer2;	
+	char lineStr1[BUFFER_SIZE];
+	char lineStr2[BUFFER_SIZE];
 	PropertyAnimation animation1;
 	PropertyAnimation animation2;
 	TextLayer *currentLayer;
 	TextLayer *nextLayer;
 } Line;
 
-Line line1;
-Line line2;
-Line line3;
+Line lines[NUM_LINES];
 
 PblTm t;
 
-static char line1Str[2][BUFFER_SIZE];
-static char line2Str[2][BUFFER_SIZE];
-static char line3Str[2][BUFFER_SIZE];
-
-static bool textInitialized = false;
+int currentMinutes;
+int currentNLines;
 
 // Animation handler
 void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
@@ -58,8 +59,11 @@ void animationStoppedHandler(struct Animation *animation, bool finished, void *c
 }
 
 // Animate line
-void makeAnimationsForLayer(Line *line, TextLayer *current, TextLayer *next)
+void makeAnimationsForLayer(Line *line)
 {
+	TextLayer *current = line->currentLayer;
+	TextLayer *next = line->nextLayer;
+
 	GRect rect = layer_get_frame(&next->layer);
 	rect.origin.x -= 144;
 	
@@ -82,38 +86,33 @@ void makeAnimationsForLayer(Line *line, TextLayer *current, TextLayer *next)
 	animation_schedule(&line->animation1.animation);
 }
 
-// Update line
-void updateLineTo(Line *line, char lineStr[2][BUFFER_SIZE], char *value)
+void updateLayerText(TextLayer* layer, char* text)
 {
-	TextLayer *next, *current;
-	
-	GRect rect = layer_get_frame(&line->currentLayer->layer);
-	current = (rect.origin.x == 0) ? line->currentLayer : line->nextLayer;
-	next = (current == line->currentLayer) ? line->nextLayer : line->currentLayer;
-	
-	// Update correct text only
-	if (current == line->currentLayer) {
-		memset(lineStr[1], 0, BUFFER_SIZE);
-		memcpy(lineStr[1], value, strlen(value));
-		text_layer_set_text(next, lineStr[1]);
-	} else {
-		memset(lineStr[0], 0, BUFFER_SIZE);
-		memcpy(lineStr[0], value, strlen(value));
-		text_layer_set_text(next, lineStr[0]);
-	}
-	
-	makeAnimationsForLayer(line, current, next);
+	const char* layerText = text_layer_get_text(layer);
+	strcpy((char*)layerText, text);
+	// To mark layer dirty
+	text_layer_set_text(layer, layerText);
+    //layer_mark_dirty(&layer->layer);
+}
+
+// Update line
+void updateLineTo(Line *line, char *value)
+{
+	updateLayerText(line->nextLayer, value);
+	makeAnimationsForLayer(line);
+
+	// Swap current/next layers
+	TextLayer *tmp = line->nextLayer;
+	line->nextLayer = line->currentLayer;
+	line->currentLayer = tmp;
 }
 
 // Check to see if the current line needs to be updated
-bool needToUpdateLine(Line *line, char lineStr[2][BUFFER_SIZE], char *nextValue)
+bool needToUpdateLine(Line *line, char *nextValue)
 {
-	char *currentStr;
-	GRect rect = layer_get_frame(&line->currentLayer->layer);
-	currentStr = (rect.origin.x == 0) ? lineStr[0] : lineStr[1];
+	const char *currentStr = text_layer_get_text(line->currentLayer);
 
-	if (memcmp(currentStr, nextValue, strlen(nextValue)) != 0 ||
-		(strlen(nextValue) == 0 && strlen(currentStr) != 0)) {
+	if (strcmp(currentStr, nextValue) != 0) {
 		return true;
 	}
 	return false;
@@ -137,49 +136,93 @@ void configureLightLayer(TextLayer *textlayer)
 	text_layer_set_text_alignment(textlayer, GTextAlignmentCenter);
 }
 
+// Configure the layers for the given text
+int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
+{
+	int numLines = 0;
+
+	// Set bold layer.
+	if (strlen(text[2]) > 0) {
+		numLines = 3;
+		configureLightLayer(lines[0].nextLayer);
+		configureLightLayer(lines[1].nextLayer);
+		configureBoldLayer(lines[2].nextLayer);
+	}
+	else if (strlen(text[1]) > 0) {
+		numLines = 2;
+		configureLightLayer(lines[0].nextLayer);
+		configureBoldLayer(lines[1].nextLayer);
+	} else
+	{
+		numLines = 1;
+		configureBoldLayer(lines[0].nextLayer);
+	}
+
+	// Calculate y position of top Line
+	int ypos = (168 - numLines * ROW_HEIGHT) / 2 - TOP_MARGIN;
+
+	// Set y positions for the lines
+	for (int i = 0; i < numLines; i++)
+	{
+		layer_set_frame(&lines[i].nextLayer->layer, GRect(144, ypos, 144, 50));
+		ypos += ROW_HEIGHT;
+	}
+
+	return numLines;
+}
+
 // Update screen based on new time
 void display_time(PblTm *t)
 {
 	// The current time text will be stored in the following 3 strings
-	char textLine1[BUFFER_SIZE];
-	char textLine2[BUFFER_SIZE];
-	char textLine3[BUFFER_SIZE];
+	char textLine[NUM_LINES][BUFFER_SIZE];
 	
-	time_to_3words(t->tm_hour, t->tm_min, textLine1, textLine2, textLine3, BUFFER_SIZE);
+	time_to_3words(t->tm_hour, t->tm_min, textLine[0], textLine[1], textLine[2], BUFFER_SIZE);
 	
-	// Set bold layer.
-	if (strlen(textLine3) > 0) {
-		configureLightLayer(line1.nextLayer);
-		configureLightLayer(line2.nextLayer);
-		configureBoldLayer(line3.nextLayer);
-	}
-	else if (strlen(textLine2) > 0) {
-		configureLightLayer(line1.nextLayer);
-		configureBoldLayer(line2.nextLayer);
-	} else
-	{
-		configureBoldLayer(line1.nextLayer);
-	}
+	currentNLines = configureLayersForText(textLine);
 
-	if (needToUpdateLine(&line1, line1Str, textLine1)) {
-		updateLineTo(&line1, line1Str, textLine1);	
+	if (needToUpdateLine(&lines[0], textLine[0])) {
+		updateLineTo(&lines[0], textLine[0]);	
 	}
-	if (needToUpdateLine(&line2, line2Str, textLine2)) {
-		updateLineTo(&line2, line2Str, textLine2);	
+	if (needToUpdateLine(&lines[1], textLine[1])) {
+		updateLineTo(&lines[1], textLine[1]);	
 	}
-	if (needToUpdateLine(&line3, line3Str, textLine3)) {
-		updateLineTo(&line3, line3Str, textLine3);	
+	if (needToUpdateLine(&lines[2], textLine[2])) {
+		updateLineTo(&lines[2], textLine[2]);	
 	}
+}
+
+void initLineForStart(Line* line)
+{
+	// Switch current and next layer
+	TextLayer* tmp  = line->currentLayer;
+	line->currentLayer = line->nextLayer;
+	line->nextLayer = tmp;
+
+	// Move current layer to screen;
+	GRect rect = layer_get_frame(&line->currentLayer->layer);
+	rect.origin.x = 0;
+	layer_set_frame(&line->currentLayer->layer, rect);
 }
 
 // Update screen without animation first time we start the watchface
 void display_initial_time(PblTm *t)
 {
-	time_to_3words(t->tm_hour, t->tm_min, line1Str[0], line2Str[0], line3Str[0], BUFFER_SIZE);
-	
-	text_layer_set_text(line1.currentLayer, line1Str[0]);
-	text_layer_set_text(line2.currentLayer, line2Str[0]);
-	text_layer_set_text(line3.currentLayer, line3Str[0]);
+	// The current time text will be stored in the following 3 strings
+	char textLine[NUM_LINES][BUFFER_SIZE];
+
+	time_to_3words(t->tm_hour, t->tm_min, textLine[0], textLine[1], textLine[2], BUFFER_SIZE);
+
+	// This configures the nextLayer for each line
+	currentNLines = configureLayersForText(textLine);
+
+	// Set the text and configure layers to the start position
+	for (int i = 0; i < currentNLines; i++)
+	{
+		updateLayerText(lines[i].nextLayer, textLine[i]);
+		// This call switches current- and nextLayer
+		initLineForStart(&lines[i]);
+	}	
 }
 
 /** 
@@ -233,6 +276,27 @@ void click_config_provider(ClickConfig **config, Window *window) {
 
 #endif
 
+void init_line(Line* line)
+{
+	// Set current- and nextLayer pointers 
+	line->currentLayer = &line->layer1;
+	line->nextLayer = &line->layer2;
+
+	// Set the text buffers
+	line->lineStr1[0] = '\0';
+	line->lineStr2[0] = '\0';
+	text_layer_set_text(&line->layer1, line->lineStr1);
+	text_layer_set_text(&line->layer2, line->lineStr2);
+
+	// Init to dummy position to the right of the screen
+	text_layer_init(line->currentLayer, GRect(144, 0, 144, 50));
+	text_layer_init(line->nextLayer, GRect(144, 0, 144, 50));
+
+	// Configure a style
+	configureLightLayer(line->currentLayer);
+	configureLightLayer(line->nextLayer);
+}
+
 void handle_init(AppContextRef ctx) {
   	(void)ctx;
 
@@ -243,41 +307,27 @@ void handle_init(AppContextRef ctx) {
 	// Init resources
 	resource_init_current_app(&APP_RESOURCES);
 	
-	// 1st line layers
-	text_layer_init(&line1.layer1, GRect(0, 18, 144, 50));
-	text_layer_init(&line1.layer2, GRect(144, 18, 144, 50));
-	line1.currentLayer = &line1.layer1;
-	line1.nextLayer = &line1.layer2;
-	configureLightLayer(&line1.layer1);
-	configureLightLayer(&line1.layer2);
+	// Init and load lines
+	for (int i = 0; i < NUM_LINES; i++)
+	{
+		init_line(&lines[i]);
+	  	layer_add_child(&window.layer, &lines[i].layer1.layer);
+		layer_add_child(&window.layer, &lines[i].layer2.layer);
+	}
 
-	// 2nd layers
-	text_layer_init(&line2.layer1, GRect(0, 55, 144, 50));
-	text_layer_init(&line2.layer2, GRect(144, 55, 144, 50));
-	line2.currentLayer = &line2.layer1;
-	line2.nextLayer = &line2.layer2;
-	configureLightLayer(&line2.layer1);
-	configureLightLayer(&line2.layer2);
-
-	// 3rd layers
-	text_layer_init(&line3.layer1, GRect(0, 92, 144, 50));
-	text_layer_init(&line3.layer2, GRect(144, 92, 144, 50));
-	line3.currentLayer = &line3.layer1;
-	line3.nextLayer = &line3.layer2;	configureBoldLayer(&line3.layer1);
-	configureBoldLayer(&line3.layer2);
+	// Workaround ---------------------------
+	text_layer_set_text(lines[0].currentLayer, "1c1c1cx");
+	text_layer_set_text(lines[0].nextLayer, "1n1n1nx");
+	text_layer_set_text(lines[1].currentLayer, "2c2c2cx");
+	text_layer_set_text(lines[1].nextLayer, "2n2n2nx");
+	text_layer_set_text(lines[2].currentLayer, "3c3c3cx");
+	text_layer_set_text(lines[2].nextLayer, "3n3n3nx");
 
 	// Configure time on init
 	get_time(&t);
 	display_initial_time(&t);
-	
-	// Load layers
-  	layer_add_child(&window.layer, &line1.layer1.layer);
-	layer_add_child(&window.layer, &line1.layer2.layer);
-	layer_add_child(&window.layer, &line2.layer1.layer);
-	layer_add_child(&window.layer, &line2.layer2.layer);
-	layer_add_child(&window.layer, &line3.layer1.layer);
-	layer_add_child(&window.layer, &line3.layer2.layer);
-	
+
+
 #if DEBUG
 	// Button functionality
 	window_set_click_config_provider(&window, (ClickConfigProvider) click_config_provider);
@@ -293,11 +343,14 @@ void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
 
 void pbl_main(void *params) {
   PebbleAppHandlers handlers = {
-    .init_handler = &handle_init,
+    .init_handler = &handle_init
+#if !DEBUG
+	,
 	.tick_info = {
 		      .tick_handler = &handle_minute_tick,
 		      .tick_units = MINUTE_UNIT
 		    }
+#endif
   };
   app_event_loop(params, &handlers);
 }

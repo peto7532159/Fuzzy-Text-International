@@ -164,7 +164,7 @@ void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line
 	memset(line3, 0, length);
 	
 	char *start = value;
-	char *pch = strstr (start, " ");
+	char *pch = strstr(start, " ");
 	while (pch != NULL) {
 		if (line1[0] == 0) {
 			memcpy(line1, start, pch-start);
@@ -173,7 +173,7 @@ void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line
 		} else if (line3[0] == 0) {
 			memcpy(line3, start, pch-start);
 		}
-		start += pch-start+1;
+		start = pch+1;
 		pch = strstr(start, " ");
 	}
 	
