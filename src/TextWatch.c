@@ -11,6 +11,9 @@
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
+#define ANIMATION_DURATION 400
+#define ANIMATION_STAGGER_TIME 100
+
 #if DEBUG
 	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
 #else
@@ -68,7 +71,7 @@ void makeAnimationsForLayer(Line *line)
 	rect.origin.x -= 144;
 	
 	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect);
-	animation_set_duration(&line->animation2.animation, 400);
+	animation_set_duration(&line->animation2.animation, ANIMATION_DURATION);
 	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut);
 	animation_schedule(&line->animation2.animation);
 	
@@ -76,7 +79,7 @@ void makeAnimationsForLayer(Line *line)
 	rect2.origin.x -= 144;
 	
 	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect2);
-	animation_set_duration(&line->animation1.animation, 400);
+	animation_set_duration(&line->animation1.animation, ANIMATION_DURATION);
 	animation_set_curve(&line->animation1.animation, AnimationCurveEaseOut);
 	
 	animation_set_handlers(&line->animation1.animation, (AnimationHandlers) {
@@ -184,9 +187,11 @@ void display_time(PblTm *t)
 	if (needToUpdateLine(&lines[0], textLine[0])) {
 		updateLineTo(&lines[0], textLine[0]);	
 	}
+	psleep(ANIMATION_STAGGER_TIME);
 	if (needToUpdateLine(&lines[1], textLine[1])) {
 		updateLineTo(&lines[1], textLine[1]);	
 	}
+	psleep(ANIMATION_STAGGER_TIME);
 	if (needToUpdateLine(&lines[2], textLine[2])) {
 		updateLineTo(&lines[2], textLine[2]);	
 	}
