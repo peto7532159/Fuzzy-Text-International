@@ -12,7 +12,7 @@
 #define TOP_MARGIN 10
 
 #define ANIMATION_DURATION 400
-#define ANIMATION_STAGGER_TIME 100
+#define ANIMATION_STAGGER_TIME 150
 
 #if DEBUG
 	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
@@ -287,12 +287,6 @@ void init_line(Line* line)
 	line->currentLayer = &line->layer1;
 	line->nextLayer = &line->layer2;
 
-	// Set the text buffers
-	line->lineStr1[0] = '\0';
-	line->lineStr2[0] = '\0';
-	text_layer_set_text(&line->layer1, line->lineStr1);
-	text_layer_set_text(&line->layer2, line->lineStr2);
-
 	// Init to dummy position to the right of the screen
 	text_layer_init(line->currentLayer, GRect(144, 0, 144, 50));
 	text_layer_init(line->nextLayer, GRect(144, 0, 144, 50));
@@ -300,6 +294,12 @@ void init_line(Line* line)
 	// Configure a style
 	configureLightLayer(line->currentLayer);
 	configureLightLayer(line->nextLayer);
+
+	// Set the text buffers
+	line->lineStr1[0] = '\0';
+	line->lineStr2[0] = '\0';
+	text_layer_set_text(&line->layer1, line->lineStr1);
+	text_layer_set_text(&line->layer2, line->lineStr2);
 }
 
 void handle_init(AppContextRef ctx) {
@@ -319,14 +319,6 @@ void handle_init(AppContextRef ctx) {
 	  	layer_add_child(&window.layer, &lines[i].layer1.layer);
 		layer_add_child(&window.layer, &lines[i].layer2.layer);
 	}
-
-	// Workaround ---------------------------
-	text_layer_set_text(lines[0].currentLayer, "1c1c1cx");
-	text_layer_set_text(lines[0].nextLayer, "1n1n1nx");
-	text_layer_set_text(lines[1].currentLayer, "2c2c2cx");
-	text_layer_set_text(lines[1].nextLayer, "2n2n2nx");
-	text_layer_set_text(lines[2].currentLayer, "3c3c3cx");
-	text_layer_set_text(lines[2].nextLayer, "3n3n3nx");
 
 	// Configure time on init
 	get_time(&t);
