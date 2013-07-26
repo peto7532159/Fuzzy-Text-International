@@ -105,7 +105,6 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
   switch (minutes)
   {
     case 0:
-      remaining -= append_string(words, remaining, " ");
       break;
     case 5:
     case 10:
@@ -114,14 +113,17 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
       remaining -= append_number(words, minutes);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, PAST);
+      remaining -= append_string(words, remaining, " ");
       break;
     case 15:
       remaining -= append_string(words, remaining, QUARTER);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, PAST);
+      remaining -= append_string(words, remaining, " ");
       break;
     case 30:
       remaining -= append_string(words, remaining, HALF);
+      remaining -= append_string(words, remaining, " ");
       hours++;
       break;
     case 35:
@@ -131,17 +133,17 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
       remaining -= append_number(words, 60 - minutes);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, TO);
+      remaining -= append_string(words, remaining, " ");
       hours++;
       break;
     case 45:
       remaining -= append_string(words, remaining, QUARTER);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, TO);
+      remaining -= append_string(words, remaining, " ");
       hours++;
       break;
   }
-
-  remaining = append_string(words, remaining, " ");
 
   // Handle hour wrapping
   hours += 12; // If hours == 0
@@ -154,27 +156,3 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
   remaining -= append_string(words, remaining, " ");
 }
 
-void time_to_3words(int hours, int minutes, char *line1, char *line2, char *line3, size_t length)
-{
-	char value[length];
-	time_to_words(hours, minutes, value, length);
-	
-	memset(line1, 0, length);
-	memset(line2, 0, length);
-	memset(line3, 0, length);
-	
-	char *start = value;
-	char *pch = strstr(start, " ");
-	while (pch != NULL) {
-		if (line1[0] == 0) {
-			memcpy(line1, start, pch-start);
-		}  else if (line2[0] == 0) {
-			memcpy(line2, start, pch-start);
-		} else if (line3[0] == 0) {
-			memcpy(line3, start, pch-start);
-		}
-		start = pch+1;
-		pch = strstr(start, " ");
-	}
-	
-}

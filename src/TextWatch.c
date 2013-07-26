@@ -7,12 +7,16 @@
 #define DEBUG 0
 
 #define NUM_LINES 3
+#define LINE_LENGTH 7
 #define BUFFER_SIZE 44
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
 #define ANIMATION_DURATION 400
 #define ANIMATION_STAGGER_TIME 150
+
+// We can add a new word to a line if there are at least this many characters free after
+#define LINE_ADD_LIMIT (LINE_LENGTH - 2)
 
 #if DEBUG
 	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
@@ -80,7 +84,7 @@ void makeAnimationsForLayer(Line *line)
 	
 	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect2);
 	animation_set_duration(&line->animation1.animation, ANIMATION_DURATION);
-	animation_set_curve(&line->animation1.animation, AnimationCurveEaseOut);
+	animation_set_curve(&line->animation1.animation, AnimationCurveEaseIn);
 	
 	animation_set_handlers(&line->animation1.animation, (AnimationHandlers) {
 		.stopped = (AnimationStoppedHandler)animationStoppedHandler
@@ -144,7 +148,7 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
 {
 	int numLines = 0;
 
-	// Set bold layer.
+	// Set bold layer. TODO make dynamic
 	if (strlen(text[2]) > 0) {
 		numLines = 3;
 		configureLightLayer(lines[0].nextLayer);
@@ -174,13 +178,47 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
 	return numLines;
 }
 
+void time_to_n_words(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
+{
+	int length = NUM_LINES * BUFFER_SIZE + 1;
+	char timeStr[length];
+	time_to_words(hours, minutes, timeStr, length);
+	
+	// Empty all lines
+	for (int i = 0; i < NUM_LINES; i++)
+	{
+		lines[i][0] = '\0';
+	}
+
+	char *start = timeStr;
+	char *end = strstr(start, " ");
+	int w = 0;
+	while (end != NULL && w < NUM_LINES) {
+		// Can we add a word to the first line?
+		if (w == 0 && end - start < LINE_ADD_LIMIT - 1)
+		{
+			char *try = strstr(end + 1, " ");
+			if (try != NULL && try - start <= LINE_ADD_LIMIT)
+			{
+				end = try;
+			}
+		}
+
+		*end = '\0';
+		strcpy(lines[w++], start);
+		start = end + 1;
+		end = strstr(start, " ");
+	}
+	
+}
+
 // Update screen based on new time
 void display_time(PblTm *t)
 {
 	// The current time text will be stored in the following 3 strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
 	
-	time_to_3words(t->tm_hour, t->tm_min, textLine[0], textLine[1], textLine[2], BUFFER_SIZE);
+	time_to_n_words(t->tm_hour, t->tm_min, textLine);
 	
 	currentNLines = configureLayersForText(textLine);
 
@@ -216,7 +254,7 @@ void display_initial_time(PblTm *t)
 	// The current time text will be stored in the following 3 strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
 
-	time_to_3words(t->tm_hour, t->tm_min, textLine[0], textLine[1], textLine[2], BUFFER_SIZE);
+	time_to_n_words(t->tm_hour, t->tm_min, textLine);
 
 	// This configures the nextLayer for each line
 	currentNLines = configureLayersForText(textLine);
