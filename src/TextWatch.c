@@ -9,6 +9,7 @@
 #define NUM_LINES 3
 #define LINE_LENGTH 7
 #define BUFFER_SIZE 44
+//(LINE_LENGTH + 1)
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
@@ -71,26 +72,30 @@ void makeAnimationsForLayer(Line *line)
 	TextLayer *current = line->currentLayer;
 	TextLayer *next = line->nextLayer;
 
-	GRect rect = layer_get_frame(&next->layer);
-	rect.origin.x -= 144;
-	
-	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect);
-	animation_set_duration(&line->animation2.animation, ANIMATION_DURATION);
-	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut);
-	animation_schedule(&line->animation2.animation);
-	
-	GRect rect2 = layer_get_frame(&current->layer);
-	rect2.origin.x -= 144;
-	
-	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect2);
+	// Configure animation for current layer to move out
+	GRect rect = layer_get_frame(&current->layer);
+	rect.origin.x =  -144;	
+	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect);
 	animation_set_duration(&line->animation1.animation, ANIMATION_DURATION);
-	animation_set_curve(&line->animation1.animation, AnimationCurveEaseIn);
-	
-	animation_set_handlers(&line->animation1.animation, (AnimationHandlers) {
+	animation_set_delay(&line->animation1.animation, 0);
+	animation_set_curve(&line->animation1.animation, AnimationCurveEaseIn); // Accelerate
+
+	// Configure animation for current layer to move in
+	GRect rect2 = layer_get_frame(&next->layer);
+	rect2.origin.x = 0;
+	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect2);
+	animation_set_duration(&line->animation2.animation, ANIMATION_DURATION);
+	animation_set_delay(&line->animation2.animation, 100);
+	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut); // Deaccelerate
+
+	// Set a handler to rearrange layers after animation is finished
+	animation_set_handlers(&line->animation2.animation, (AnimationHandlers) {
 		.stopped = (AnimationStoppedHandler)animationStoppedHandler
 	}, current);
-	
+
+	// Start the animations
 	animation_schedule(&line->animation1.animation);
+	animation_schedule(&line->animation2.animation);	
 }
 
 void updateLayerText(TextLayer* layer, char* text)
@@ -178,7 +183,7 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
 	return numLines;
 }
 
-void time_to_n_words(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
+void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
 {
 	int length = NUM_LINES * BUFFER_SIZE + 1;
 	char timeStr[length];
@@ -215,10 +220,10 @@ void time_to_n_words(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
 // Update screen based on new time
 void display_time(PblTm *t)
 {
-	// The current time text will be stored in the following 3 strings
+	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
 	
-	time_to_n_words(t->tm_hour, t->tm_min, textLine);
+	time_to_lines(t->tm_hour, t->tm_min, textLine);
 	
 	currentNLines = configureLayersForText(textLine);
 
@@ -251,10 +256,10 @@ void initLineForStart(Line* line)
 // Update screen without animation first time we start the watchface
 void display_initial_time(PblTm *t)
 {
-	// The current time text will be stored in the following 3 strings
+	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
 
-	time_to_n_words(t->tm_hour, t->tm_min, textLine);
+	time_to_lines(t->tm_hour, t->tm_min, textLine);
 
 	// This configures the nextLayer for each line
 	currentNLines = configureLayersForText(textLine);
