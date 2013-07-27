@@ -6,7 +6,7 @@
 
 #define DEBUG 0
 
-#define NUM_LINES 3
+#define NUM_LINES 4
 #define LINE_LENGTH 7
 #define BUFFER_SIZE 44
 //(LINE_LENGTH + 1)

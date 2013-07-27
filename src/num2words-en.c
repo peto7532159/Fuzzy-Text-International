@@ -109,7 +109,6 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
     case 5:
     case 10:
     case 20:
-    case 25:
       remaining -= append_number(words, minutes);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, PAST);
@@ -121,12 +120,26 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
       remaining -= append_string(words, remaining, PAST);
       remaining -= append_string(words, remaining, " ");
       break;
+    case 25:
+      remaining -= append_number(words, 5);
+      remaining -= append_string(words, remaining, " ");
+      remaining -= append_string(words, remaining, TO);
+      remaining -= append_string(words, remaining, " ");    
+      // Continues into case 30...
     case 30:
       remaining -= append_string(words, remaining, HALF);
       remaining -= append_string(words, remaining, " ");
       hours++;
       break;
     case 35:
+      remaining -= append_number(words, 5);
+      remaining -= append_string(words, remaining, " ");
+      remaining -= append_string(words, remaining, PAST);
+      remaining -= append_string(words, remaining, " ");    
+      remaining -= append_string(words, remaining, HALF);
+      remaining -= append_string(words, remaining, " ");
+      hours++;
+      break;
     case 40:
     case 50:
     case 55:
