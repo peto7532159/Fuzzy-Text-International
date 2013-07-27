@@ -13,8 +13,12 @@
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
+// The time it takes for a layer to slide in or out.
 #define ANIMATION_DURATION 400
+// Delay between the layer animation, from top tp bottom
 #define ANIMATION_STAGGER_TIME 150
+// Delay from the start of the current layer going out until the next layer slides in
+#define ANIMATION_OUT_IN_DELAY 100
 
 // We can add a new word to a line if there are at least this many characters free after
 #define LINE_ADD_LIMIT (LINE_LENGTH - 2)
@@ -22,7 +26,7 @@
 #if DEBUG
 	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
 #else
-	#define WATCH_TITLE "SE Fuzzy Text " 
+	#define WATCH_TITLE "SE Fuzzy Text" 
 #endif
 
 #define MY_UUID { 0x8c, 0xf3, 0x9b, 0x73, 0xcf, 0x0e, 0x66, 0xef, 0x5b, 0x66, 0x80, 0x28, 0xdf, 0xc4, 0xb4, 0xa2 }
@@ -67,7 +71,7 @@ void animationStoppedHandler(struct Animation *animation, bool finished, void *c
 }
 
 // Animate line
-void makeAnimationsForLayer(Line *line)
+void makeAnimationsForLayer(Line *line, int delay)
 {
 	TextLayer *current = line->currentLayer;
 	TextLayer *next = line->nextLayer;
@@ -77,7 +81,7 @@ void makeAnimationsForLayer(Line *line)
 	rect.origin.x =  -144;	
 	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect);
 	animation_set_duration(&line->animation1.animation, ANIMATION_DURATION);
-	animation_set_delay(&line->animation1.animation, 0);
+	animation_set_delay(&line->animation1.animation, delay);
 	animation_set_curve(&line->animation1.animation, AnimationCurveEaseIn); // Accelerate
 
 	// Configure animation for current layer to move in
@@ -85,7 +89,7 @@ void makeAnimationsForLayer(Line *line)
 	rect2.origin.x = 0;
 	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect2);
 	animation_set_duration(&line->animation2.animation, ANIMATION_DURATION);
-	animation_set_delay(&line->animation2.animation, 100);
+	animation_set_delay(&line->animation2.animation, delay + ANIMATION_OUT_IN_DELAY);
 	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut); // Deaccelerate
 
 	// Set a handler to rearrange layers after animation is finished
@@ -108,10 +112,10 @@ void updateLayerText(TextLayer* layer, char* text)
 }
 
 // Update line
-void updateLineTo(Line *line, char *value)
+void updateLineTo(Line *line, char *value, int delay)
 {
 	updateLayerText(line->nextLayer, value);
-	makeAnimationsForLayer(line);
+	makeAnimationsForLayer(line, delay);
 
 	// Swap current/next layers
 	TextLayer *tmp = line->nextLayer;
@@ -153,22 +157,22 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
 {
 	int numLines = 0;
 
-	// Set bold layer. TODO make dynamic
-	if (strlen(text[2]) > 0) {
-		numLines = 3;
-		configureLightLayer(lines[0].nextLayer);
-		configureLightLayer(lines[1].nextLayer);
-		configureBoldLayer(lines[2].nextLayer);
+	// Set bold layer.
+	int i;
+	for (i = 1; i < NUM_LINES; i++) {
+		if (strlen(text[i]) > 0) {
+			configureLightLayer(lines[i - 1].nextLayer);
+			if (i == NUM_LINES - 1) {
+				configureBoldLayer(lines[i].nextLayer);
+			}
+		}
+		else
+		{
+			configureBoldLayer(lines[i - 1].nextLayer);
+			break;
+		}
 	}
-	else if (strlen(text[1]) > 0) {
-		numLines = 2;
-		configureLightLayer(lines[0].nextLayer);
-		configureBoldLayer(lines[1].nextLayer);
-	} else
-	{
-		numLines = 1;
-		configureBoldLayer(lines[0].nextLayer);
-	}
+	numLines = i;
 
 	// Calculate y position of top Line
 	int ypos = (168 - numLines * ROW_HEIGHT) / 2 - TOP_MARGIN;
@@ -225,19 +229,17 @@ void display_time(PblTm *t)
 	
 	time_to_lines(t->tm_hour, t->tm_min, textLine);
 	
-	currentNLines = configureLayersForText(textLine);
+	int nextNLines = configureLayersForText(textLine);
 
-	if (needToUpdateLine(&lines[0], textLine[0])) {
-		updateLineTo(&lines[0], textLine[0]);	
+	int delay = 0;
+	for (int i = 0; i < NUM_LINES; i++) {
+		if (nextNLines != currentNLines || needToUpdateLine(&lines[i], textLine[i])) {
+			updateLineTo(&lines[i], textLine[i], delay);
+			delay += ANIMATION_STAGGER_TIME;
+		}
 	}
-	psleep(ANIMATION_STAGGER_TIME);
-	if (needToUpdateLine(&lines[1], textLine[1])) {
-		updateLineTo(&lines[1], textLine[1]);	
-	}
-	psleep(ANIMATION_STAGGER_TIME);
-	if (needToUpdateLine(&lines[2], textLine[2])) {
-		updateLineTo(&lines[2], textLine[2]);	
-	}
+	
+	currentNLines = nextNLines;
 }
 
 void initLineForStart(Line* line)
