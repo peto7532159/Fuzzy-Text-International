@@ -8,8 +8,7 @@
 
 #define NUM_LINES 4
 #define LINE_LENGTH 7
-#define BUFFER_SIZE 44
-//(LINE_LENGTH + 1)
+#define BUFFER_SIZE (LINE_LENGTH + 1)
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
