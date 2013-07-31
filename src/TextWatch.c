@@ -8,9 +8,12 @@
 
 #define NUM_LINES 4
 #define LINE_LENGTH 7
-#define BUFFER_SIZE (LINE_LENGTH + 1)
+#define BUFFER_SIZE (LINE_LENGTH + 2)
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
+
+// Text alignment. Can be GTextAlignmentLeft, GTextAlignmentCenter or GTextAlignmentRight
+#define TEXT_ALIGN GTextAlignmentCenter
 
 // The time it takes for a layer to slide in or out.
 #define ANIMATION_DURATION 400
@@ -19,8 +22,9 @@
 // Delay from the start of the current layer going out until the next layer slides in
 #define ANIMATION_OUT_IN_DELAY 100
 
+#define LINE_APPEND_MARGIN 0
 // We can add a new word to a line if there are at least this many characters free after
-#define LINE_ADD_LIMIT (LINE_LENGTH - 2)
+#define LINE_APPEND_LIMIT (LINE_LENGTH - LINE_APPEND_MARGIN)
 
 #if DEBUG
 	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
@@ -139,7 +143,7 @@ void configureBoldLayer(TextLayer *textlayer)
 	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_BOLD));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
 }
 
 // Configure light line of text
@@ -148,7 +152,7 @@ void configureLightLayer(TextLayer *textlayer)
 	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_LIGHT));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
 }
 
 // Configure the layers for the given text
@@ -203,10 +207,10 @@ void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
 	int w = 0;
 	while (end != NULL && w < NUM_LINES) {
 		// Can we add a word to the first line?
-		if (w == 0 && end - start < LINE_ADD_LIMIT - 1)
+		if (w == 0 && end - start < LINE_APPEND_LIMIT - 1)
 		{
 			char *try = strstr(end + 1, " ");
-			if (try != NULL && try - start <= LINE_ADD_LIMIT)
+			if (try != NULL && try - start <= LINE_APPEND_LIMIT)
 			{
 				end = try;
 			}
