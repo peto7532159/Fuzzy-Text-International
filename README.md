@@ -6,6 +6,22 @@ This watchface is based on the PebbleTextWatch by waerewip (https://github.com/w
 I wanted to combine the elegant layout and animations of the TextWatch with the natural language of
 the Fuzzy Time watchface and I wanted it in my native language, Swedish.
 
-The current version is mostly working. I have done some rather extensive refactoring of the data structures
-to more easily accomodate four lines of text. 
+Features:
+ - Fuzzy time in natural language. (Swedish)
+ - The large and easy to read fonts of the original Text Watch
+ - Nice staggered animation
+ - Between one and four lines of text, depending on need.
+ - The text rows are always centered vertically
+ - Smaller words may share a single line (such as "fem i")
+ - Refactored code for better flexibility/rewriteability
 
+Preview
+-------
+A demo video of the left justified version is available here:
+https://www.youtube.com/watch?v=ccubUg9Hp5Y
+
+
+Binary
+------
+A binary can be found at mypebblefaces.com, called "Swedish Fuzzy Text watch".
+Here is a link: http://goo.gl/JXmUB4
