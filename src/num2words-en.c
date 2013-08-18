@@ -133,8 +133,7 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
       remaining -= append_string(words, remaining, HALF);
       remaining -= append_string(words, remaining, " ");
       remaining -= append_string(words, remaining, PAST);
-      remaining -= append_string(words, remaining, " ");    
-      hours++;
+      remaining -= append_string(words, remaining, " ");
       break;
     case 35:
       remaining -= append_number(words, 20);
