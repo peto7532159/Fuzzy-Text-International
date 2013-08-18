@@ -3,49 +3,50 @@
 //#include <stdio.h>
 
 static const char* const ONES[] = {
-  "noll",
-  "ett",
-  "två",
-  "tre",
-  "fyra",
-  "fem",
-  "sex",
-  "sju",
-  "åtta",
-  "nio"
+  "zero",
+  "one",
+  "two",
+  "three",
+  "four",
+  "five",
+  "six",
+  "seven",
+  "eight",
+  "nine"
 };
 
 static const char* const TEENS[] ={
   "",
-  "elva",
-  "tolv",
-  "tretton",
-  "fjorton",
-  "femton",
-  "sexton",
-  "sjutton",
-  "arton",
-  "nitton"
+  "eleven",
+  "twelve",
+  "thirteen",
+  "fourteen",
+  "fifteen",
+  "sixteen",
+  "seventeen",
+  "eighteen",
+  "nineteen"
 };
 
 static const char* const TENS[] = {
   "",
-  "tio",
-  "tjugo",
-  "trettio",
-  "fyrtio",
-  "femtio",
-  "sextio",
-  "sjuttio",
-  "åttio",
-  "nittio"
+  "ten",
+  "twenty",
+  "thirty",
+  "fourty",
+  "fifty",
+  "sixty",
+  "seventy",
+  "eighty",
+  "ninety"
 };
 
-#define QUARTER "kvart"
-#define HALF "halv"
+#define OCLOCK "o'clock"
+#define QUARTER "quarter"
+#define HALF "half"
 
-#define PAST "över"
-#define TO "i"
+#define PAST "past"
+#define TO "to"
 
 #define MAX_LEN 7
 
@@ -121,23 +122,27 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
       remaining -= append_string(words, remaining, " ");
       break;
     case 25:
-      remaining -= append_number(words, 5);
+      remaining -= append_number(words, 20);
       remaining -= append_string(words, remaining, " ");
-      remaining -= append_string(words, remaining, TO);
+      remaining -= append_number(words, 5);
       remaining -= append_string(words, remaining, " ");    
-      // Continues into case 30...
+      remaining -= append_string(words, remaining, PAST);
+      remaining -= append_string(words, remaining, " ");    
+      break;
     case 30:
       remaining -= append_string(words, remaining, HALF);
       remaining -= append_string(words, remaining, " ");
+      remaining -= append_string(words, remaining, PAST);
+      remaining -= append_string(words, remaining, " ");    
       hours++;
       break;
     case 35:
+      remaining -= append_number(words, 20);
+      remaining -= append_string(words, remaining, " ");
       remaining -= append_number(words, 5);
-      remaining -= append_string(words, remaining, " ");
-      remaining -= append_string(words, remaining, PAST);
       remaining -= append_string(words, remaining, " ");    
-      remaining -= append_string(words, remaining, HALF);
-      remaining -= append_string(words, remaining, " ");
+      remaining -= append_string(words, remaining, TO);
+      remaining -= append_string(words, remaining, " ");    
       hours++;
       break;
     case 40:
@@ -168,5 +173,12 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
   remaining -= append_string(words, remaining, "*"); // Make hours bold
   remaining -= append_number(words, hours);
   remaining -= append_string(words, remaining, " ");
+
+  // Add o'clock to whole hours
+  if (minutes == 0)
+  {
+    remaining -= append_string(words, remaining, OCLOCK);
+    remaining -= append_string(words, remaining, " ");    
+  }
 }
 
