@@ -27,9 +27,9 @@
 #define LINE_APPEND_LIMIT (LINE_LENGTH - LINE_APPEND_MARGIN)
 
 #if DEBUG
-	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
+	#define WATCH_TITLE "Fuzzy Text Dbg" 
 #else
-	#define WATCH_TITLE "SE Fuzzy Text" 
+	#define WATCH_TITLE "Fuzzy Text" 
 #endif
 
 #define MY_UUID { 0x7a, 0xf3, 0x9b, 0x73, 0xcf, 0x0e, 0x66, 0xef, 0x5b, 0x66, 0x80, 0x28, 0xdf, 0xc4, 0xb4, 0xa2 }
