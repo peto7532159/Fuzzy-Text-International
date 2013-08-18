@@ -17,7 +17,7 @@
 
 // The time it takes for a layer to slide in or out.
 #define ANIMATION_DURATION 400
-// Delay between the layer animation, from top tp bottom
+// Delay between the layers animations, from top to bottom
 #define ANIMATION_STAGGER_TIME 150
 // Delay from the start of the current layer going out until the next layer slides in
 #define ANIMATION_OUT_IN_DELAY 100
@@ -156,22 +156,25 @@ void configureLightLayer(TextLayer *textlayer)
 }
 
 // Configure the layers for the given text
-int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
+int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
 {
 	int numLines = 0;
 
 	// Set bold layer.
 	int i;
-	for (i = 1; i < NUM_LINES; i++) {
+	for (i = 0; i < NUM_LINES; i++) {
 		if (strlen(text[i]) > 0) {
-			configureLightLayer(lines[i - 1].nextLayer);
-			if (i == NUM_LINES - 1) {
+			if (format[i] == 'b')
+			{
 				configureBoldLayer(lines[i].nextLayer);
+			}
+			else
+			{
+				configureLightLayer(lines[i].nextLayer);
 			}
 		}
 		else
 		{
-			configureBoldLayer(lines[i - 1].nextLayer);
 			break;
 		}
 	}
@@ -190,7 +193,7 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE])
 	return numLines;
 }
 
-void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
+void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE], char format[])
 {
 	int length = NUM_LINES * BUFFER_SIZE + 1;
 	char timeStr[length];
@@ -204,11 +207,26 @@ void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
 
 	char *start = timeStr;
 	char *end = strstr(start, " ");
-	int w = 0;
-	while (end != NULL && w < NUM_LINES) {
-		// Can we add a word to the first line?
-		if (w == 0 && end - start < LINE_APPEND_LIMIT - 1)
+	int l = 0;
+	while (end != NULL && l < NUM_LINES) {
+		// Check word for bold prefix
+		if (*start == '*' && end - start > 1)
 		{
+			// Mark line bold and move start to the first character of the word
+			format[l] = 'b';
+			start++;
+		}
+		else
+		{
+			// Mark line normal
+			format[l] = ' ';
+		}
+
+		// Can we add another word to the line?
+		if (format[l] == ' ' && *(end + 1) != '*'    // are both lines formatted normal?
+			&& end - start < LINE_APPEND_LIMIT - 1)  // is the first word is short enough?
+		{
+			// See if next word fits
 			char *try = strstr(end + 1, " ");
 			if (try != NULL && try - start <= LINE_APPEND_LIMIT)
 			{
@@ -216,8 +234,11 @@ void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE])
 			}
 		}
 
+		// copy to line
 		*end = '\0';
-		strcpy(lines[w++], start);
+		strcpy(lines[l++], start);
+
+		// Look for next word
 		start = end + 1;
 		end = strstr(start, " ");
 	}
@@ -229,10 +250,11 @@ void display_time(PblTm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
+	char format[NUM_LINES];
+
+	time_to_lines(t->tm_hour, t->tm_min, textLine, format);
 	
-	time_to_lines(t->tm_hour, t->tm_min, textLine);
-	
-	int nextNLines = configureLayersForText(textLine);
+	int nextNLines = configureLayersForText(textLine, format);
 
 	int delay = 0;
 	for (int i = 0; i < NUM_LINES; i++) {
@@ -263,11 +285,12 @@ void display_initial_time(PblTm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
+	char format[NUM_LINES];
 
-	time_to_lines(t->tm_hour, t->tm_min, textLine);
+	time_to_lines(t->tm_hour, t->tm_min, textLine, format);
 
 	// This configures the nextLayer for each line
-	currentNLines = configureLayersForText(textLine);
+	currentNLines = configureLayersForText(textLine, format);
 
 	// Set the text and configure layers to the start position
 	for (int i = 0; i < currentNLines; i++)

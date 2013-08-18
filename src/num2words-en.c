@@ -165,6 +165,7 @@ void time_to_words(int hours, int minutes, char* words, size_t length) {
     hours -= 12;
   }
 
+  remaining -= append_string(words, remaining, "*"); // Make hours bold
   remaining -= append_number(words, hours);
   remaining -= append_string(words, remaining, " ");
 }
