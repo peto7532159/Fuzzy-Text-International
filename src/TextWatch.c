@@ -1,6 +1,4 @@
-#include "pebble_os.h"
-#include "pebble_app.h"
-#include "pebble_fonts.h"
+#include <pebble.h>
 
 #include "num2words-en.h"
 
@@ -25,25 +23,6 @@
 #define LINE_APPEND_MARGIN 0
 // We can add a new word to a line if there are at least this many characters free after
 #define LINE_APPEND_LIMIT (LINE_LENGTH - LINE_APPEND_MARGIN)
-
-#if DEBUG
-	#define WATCH_TITLE "SE Fuzzy Text Dbg" 
-	#define MY_UUID { 0x8c, 0xf3, 0x9b, 0x73, 0xcf, 0x0e, 0x66, 0xef, 0x5b, 0x66, 0x80, 0x28, 0xdf, 0xc4, 0xb4, 0xd2 }
-#else
-	#define WATCH_TITLE "SE Fuzzy Text" 
-	#define MY_UUID { 0x8c, 0xf3, 0x9b, 0x73, 0xcf, 0x0e, 0x66, 0xef, 0x5b, 0x66, 0x80, 0x28, 0xdf, 0xc4, 0xb4, 0xa2 }
-#endif
-
-PBL_APP_INFO(MY_UUID,
-             WATCH_TITLE, "Wip Interactive",
-             1, 0,
-             DEFAULT_MENU_ICON,
-#if DEBUG
-             APP_INFO_STANDARD_APP
-#else
-			 APP_INFO_WATCH_FACE
-#endif
-);
 
 Window window;
 
@@ -374,9 +353,7 @@ void init_line(Line* line)
 	text_layer_set_text(&line->layer2, line->lineStr2);
 }
 
-void handle_init(AppContextRef ctx) {
-  	(void)ctx;
-
+void handle_init() {
 	window_init(&window, "TextWatch");
 	window_stack_push(&window, true);
 	window_set_background_color(&window, GColorBlack);
@@ -403,6 +380,11 @@ void handle_init(AppContextRef ctx) {
 #endif
 }
 
+void handle_deinit() {
+{
+	// Nothing yet
+}
+
 // Time handler called every minute by the system
 void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
   (void)ctx;
@@ -410,16 +392,10 @@ void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
   display_time(t->tick_time);
 }
 
-void pbl_main(void *params) {
-  PebbleAppHandlers handlers = {
-    .init_handler = &handle_init
-#if !DEBUG
-	,
-	.tick_info = {
-		      .tick_handler = &handle_minute_tick,
-		      .tick_units = MINUTE_UNIT
-		    }
-#endif
-  };
-  app_event_loop(params, &handlers);
+int main(void)
+{
+	handle_init();
+	app_event_loop();
+	handle_deinit();
 }
+
