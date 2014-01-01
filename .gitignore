@@ -1,9 +1,5 @@
 .*
+
+# Ignore build generated files
 build
-include
-lib
-pebble_app.ld
-resources/wscript
-tools
-waf
 wscript

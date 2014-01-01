@@ -1,0 +1,15 @@
+{
+  "uuid": "8cf39b73-cf0e-66ef-5b66-8028dfc4b4a2",
+  "shortName": "SE Fuzzy Text",
+  "longName": "SE Fuzzy Text",
+  "companyName": "Wip Interactive",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": false
+  },
+  "appKeys": {},
+  "resources": {
+    "media": []
+  }
+}
