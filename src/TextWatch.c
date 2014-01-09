@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <time.h>
 
 #include "num2words-en.h"
 
@@ -39,7 +40,7 @@ typedef struct {
 
 Line lines[NUM_LINES];
 
-PblTm t;
+struct tm t;
 
 int currentMinutes;
 int currentNLines;
@@ -226,7 +227,7 @@ void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE], c
 }
 
 // Update screen based on new time
-void display_time(PblTm *t)
+void display_time(struct tm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
@@ -261,7 +262,7 @@ void initLineForStart(Line* line)
 }
 
 // Update screen without animation first time we start the watchface
-void display_initial_time(PblTm *t)
+void display_initial_time(struct tm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
@@ -386,10 +387,9 @@ void handle_deinit() {
 }
 
 // Time handler called every minute by the system
-void handle_minute_tick(AppContextRef ctx, PebbleTickEvent *t) {
-  (void)ctx;
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
-  display_time(t->tick_time);
+  display_time(tick_time);
 }
 
 int main(void)
