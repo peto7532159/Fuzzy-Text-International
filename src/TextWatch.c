@@ -1,5 +1,4 @@
 #include <pebble.h>
-#include <time.h>
 
 #include "num2words-en.h"
 
@@ -25,22 +24,20 @@
 // We can add a new word to a line if there are at least this many characters free after
 #define LINE_APPEND_LIMIT (LINE_LENGTH - LINE_APPEND_MARGIN)
 
-Window window;
+Window *window;
 
 typedef struct {
-	TextLayer layer1;
-	TextLayer layer2;	
-	char lineStr1[BUFFER_SIZE];
-	char lineStr2[BUFFER_SIZE];
-	PropertyAnimation animation1;
-	PropertyAnimation animation2;
 	TextLayer *currentLayer;
 	TextLayer *nextLayer;
+	char lineStr1[BUFFER_SIZE];
+	char lineStr2[BUFFER_SIZE];
+	PropertyAnimation *animation1;
+	PropertyAnimation *animation2;
 } Line;
 
 Line lines[NUM_LINES];
 
-struct tm t;
+struct tm *t;
 
 int currentMinutes;
 int currentNLines;
@@ -49,9 +46,9 @@ int currentNLines;
 void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
 {
 	TextLayer *current = (TextLayer *)context;
-	GRect rect = layer_get_frame(&current->layer);
+	GRect rect = layer_get_frame((Layer *)current);
 	rect.origin.x = 144;
-	layer_set_frame(&current->layer, rect);
+	layer_set_frame((Layer *)current, rect);
 }
 
 // Animate line
@@ -60,30 +57,40 @@ void makeAnimationsForLayer(Line *line, int delay)
 	TextLayer *current = line->currentLayer;
 	TextLayer *next = line->nextLayer;
 
+	// Destroy old animations 
+	if (line->animation1 != NULL)
+	{
+		 property_animation_destroy(line->animation1);
+	}
+	if (line->animation2 != NULL)
+	{
+		 property_animation_destroy(line->animation2);
+	}
+
 	// Configure animation for current layer to move out
-	GRect rect = layer_get_frame(&current->layer);
-	rect.origin.x =  -144;	
-	property_animation_init_layer_frame(&line->animation1, &current->layer, NULL, &rect);
-	animation_set_duration(&line->animation1.animation, ANIMATION_DURATION);
-	animation_set_delay(&line->animation1.animation, delay);
-	animation_set_curve(&line->animation1.animation, AnimationCurveEaseIn); // Accelerate
+	GRect rect = layer_get_frame((Layer *)current);
+	rect.origin.x =  -144;
+	line->animation1 = property_animation_create_layer_frame((Layer *)current, NULL, &rect);
+	animation_set_duration(&line->animation1->animation, ANIMATION_DURATION);
+	animation_set_delay(&line->animation1->animation, delay);
+	animation_set_curve(&line->animation1->animation, AnimationCurveEaseIn); // Accelerate
 
 	// Configure animation for current layer to move in
-	GRect rect2 = layer_get_frame(&next->layer);
+	GRect rect2 = layer_get_frame((Layer *)next);
 	rect2.origin.x = 0;
-	property_animation_init_layer_frame(&line->animation2, &next->layer, NULL, &rect2);
-	animation_set_duration(&line->animation2.animation, ANIMATION_DURATION);
-	animation_set_delay(&line->animation2.animation, delay + ANIMATION_OUT_IN_DELAY);
-	animation_set_curve(&line->animation2.animation, AnimationCurveEaseOut); // Deaccelerate
+	line->animation2 = property_animation_create_layer_frame((Layer *)next, NULL, &rect2);
+	animation_set_duration(&line->animation2->animation, ANIMATION_DURATION);
+	animation_set_delay(&line->animation2->animation, delay + ANIMATION_OUT_IN_DELAY);
+	animation_set_curve(&line->animation2->animation, AnimationCurveEaseOut); // Deaccelerate
 
 	// Set a handler to rearrange layers after animation is finished
-	animation_set_handlers(&line->animation2.animation, (AnimationHandlers) {
+	animation_set_handlers(&line->animation2->animation, (AnimationHandlers) {
 		.stopped = (AnimationStoppedHandler)animationStoppedHandler
 	}, current);
 
 	// Start the animations
-	animation_schedule(&line->animation1.animation);
-	animation_schedule(&line->animation2.animation);	
+	animation_schedule(&line->animation1->animation);
+	animation_schedule(&line->animation2->animation);	
 }
 
 void updateLayerText(TextLayer* layer, char* text)
@@ -121,7 +128,7 @@ bool needToUpdateLine(Line *line, char *nextValue)
 // Configure bold line of text
 void configureBoldLayer(TextLayer *textlayer)
 {
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_BOLD));
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
@@ -130,7 +137,7 @@ void configureBoldLayer(TextLayer *textlayer)
 // Configure light line of text
 void configureLightLayer(TextLayer *textlayer)
 {
-	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_GOTHAM_42_LIGHT));
+	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
 	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
@@ -167,7 +174,7 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
 	// Set y positions for the lines
 	for (int i = 0; i < numLines; i++)
 	{
-		layer_set_frame(&lines[i].nextLayer->layer, GRect(144, ypos, 144, 50));
+		layer_set_frame((Layer *)lines[i].nextLayer, GRect(144, ypos, 144, 50));
 		ypos += ROW_HEIGHT;
 	}
 
@@ -256,9 +263,9 @@ void initLineForStart(Line* line)
 	line->nextLayer = tmp;
 
 	// Move current layer to screen;
-	GRect rect = layer_get_frame(&line->currentLayer->layer);
+	GRect rect = layer_get_frame((Layer *)line->currentLayer);
 	rect.origin.x = 0;
-	layer_set_frame(&line->currentLayer->layer, rect);
+	layer_set_frame((Layer *)line->currentLayer, rect);
 }
 
 // Update screen without animation first time we start the watchface
@@ -292,16 +299,16 @@ void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
-	t.tm_min += 5;
-	if (t.tm_min >= 60) {
-		t.tm_min = 0;
-		t.tm_hour += 1;
+	t->tm_min += 5;
+	if (t->tm_min >= 60) {
+		t->tm_min = 0;
+		t->tm_hour += 1;
 		
-		if (t.tm_hour >= 24) {
-			t.tm_hour = 0;
+		if (t->tm_hour >= 24) {
+			t->tm_hour = 0;
 		}
 	}
-	display_time(&t);
+	display_time(t);
 }
 
 
@@ -309,16 +316,16 @@ void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
-	t.tm_min -= 5;
-	if (t.tm_min < 0) {
-		t.tm_min = 55;
-		t.tm_hour -= 1;
+	t->tm_min -= 5;
+	if (t->tm_min < 0) {
+		t->tm_min = 55;
+		t->tm_hour -= 1;
 		
-		if (t.tm_hour < 0) {
-			t.tm_hour = 23;
+		if (t->tm_hour < 0) {
+			t->tm_hour = 23;
 		}
 	}
-	display_time(&t);
+	display_time(t);
 }
 
 void click_config_provider(ClickConfig **config, Window *window) {
@@ -335,13 +342,9 @@ void click_config_provider(ClickConfig **config, Window *window) {
 
 void init_line(Line* line)
 {
-	// Set current- and nextLayer pointers 
-	line->currentLayer = &line->layer1;
-	line->nextLayer = &line->layer2;
-
-	// Init to dummy position to the right of the screen
-	text_layer_init(line->currentLayer, GRect(144, 0, 144, 50));
-	text_layer_init(line->nextLayer, GRect(144, 0, 144, 50));
+	// Create layers with dummy position to the right of the screen
+	line->currentLayer = text_layer_create(GRect(144, 0, 144, 50));
+	line->nextLayer = text_layer_create(GRect(144, 0, 144, 50));
 
 	// Configure a style
 	configureLightLayer(line->currentLayer);
@@ -350,40 +353,58 @@ void init_line(Line* line)
 	// Set the text buffers
 	line->lineStr1[0] = '\0';
 	line->lineStr2[0] = '\0';
-	text_layer_set_text(&line->layer1, line->lineStr1);
-	text_layer_set_text(&line->layer2, line->lineStr2);
+	text_layer_set_text(line->currentLayer, line->lineStr1);
+	text_layer_set_text(line->nextLayer, line->lineStr2);
+
+	// Initially there are no animations
+	line->animation1 = NULL;
+	line->animation2 = NULL;
 }
 
 void handle_init() {
-	window_init(&window, "TextWatch");
-	window_stack_push(&window, true);
-	window_set_background_color(&window, GColorBlack);
+	window_create();
+	window_stack_push(window, true);
+	window_set_background_color(window, GColorBlack);
 
-	// Init resources
-	resource_init_current_app(&APP_RESOURCES);
-	
 	// Init and load lines
 	for (int i = 0; i < NUM_LINES; i++)
 	{
 		init_line(&lines[i]);
-	  	layer_add_child(&window.layer, &lines[i].layer1.layer);
-		layer_add_child(&window.layer, &lines[i].layer2.layer);
+	  	layer_add_child(window_get_root_layer(window), (Layer *)lines[i].currentLayer);
+		layer_add_child(window_get_root_layer(window), (Layer *)lines[i].nextLayer);
 	}
 
 	// Configure time on init
-	get_time(&t);
-	display_initial_time(&t);
+	time_t raw_time;
+
+	time(&raw_time);
+	t = localtime(&raw_time);
+	display_initial_time(t);
 
 
 #if DEBUG
 	// Button functionality
-	window_set_click_config_provider(&window, (ClickConfigProvider) click_config_provider);
+	window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
 #endif
 }
 
-void handle_deinit() {
+void destroy_line(Line* line)
 {
-	// Nothing yet
+	// Free layers
+	text_layer_destroy(line->currentLayer);
+	text_layer_destroy(line->nextLayer);
+}
+
+void handle_deinit()
+{
+	// Free lines
+	for (int i = 0; i < NUM_LINES; i++)
+	{
+		destroy_line(&lines[i]);
+	}
+
+	// Free window
+	window_destroy(window);
 }
 
 // Time handler called every minute by the system
