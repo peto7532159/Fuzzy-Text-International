@@ -362,7 +362,7 @@ void init_line(Line* line)
 }
 
 void handle_init() {
-	window_create();
+	window = window_create();
 	window_stack_push(window, true);
 	window_set_background_color(window, GColorBlack);
 
