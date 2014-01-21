@@ -289,6 +289,12 @@ void display_initial_time(struct tm *t)
 	}	
 }
 
+// Time handler called every minute by the system
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
+{
+  display_time(tick_time);
+}
+
 /** 
  * Debug methods. For quickly debugging enable debug macro on top to transform the watchface into
  * a standard app and you will be able to change the time with the up and down buttons
@@ -381,6 +387,8 @@ void handle_init() {
 	t = localtime(&raw_time);
 	display_initial_time(t);
 
+	// Subscribe to minute ticks
+	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
 #if DEBUG
 	// Button functionality
@@ -405,12 +413,6 @@ void handle_deinit()
 
 	// Free window
 	window_destroy(window);
-}
-
-// Time handler called every minute by the system
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
-
-  display_time(tick_time);
 }
 
 int main(void)
