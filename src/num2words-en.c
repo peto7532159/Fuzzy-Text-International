@@ -2,7 +2,7 @@
 #include "string.h"
 
 static const char* const HOURS[] = {
-  "midnight",
+  "twelve",
   "one",
   "two",
   "three",
@@ -13,8 +13,7 @@ static const char* const HOURS[] = {
   "eight",
   "nine",
   "ten",
-  "eleven",
-  "noon"
+  "eleven"
 };
 
 static const char* const RELS[] = {
@@ -49,15 +48,10 @@ void time_to_words(int hours, int minutes, int seconds, char* words, size_t buff
   // into five minute intervals.
   int half_mins = (2 * minutes) + (seconds / 30);
   int index = ((half_mins + 5) / (2 * 5)) % 12;
-  int hour = hours % 12;
+  int hour = index < 7 ? hours % 12 : (hours + 1) % 12;
 
-  if (index == 0 && hour == 0) {
+  if (index == 0) {
     // The "*" makes the hour bold.
-    remaining -= append_string(words, remaining, "*");
-    // It seems awkward to write "noon o'clock" or "midnight o'clock".
-    remaining -= append_string(words, remaining, HOURS[hours /* no modulus! */]);
-  }
-  else if (index == 0) {
     remaining -= append_string(words, remaining, "*");
     remaining -= append_string(words, remaining, HOURS[hour]);
     remaining -= append_string(words, remaining, RELS[index]);
