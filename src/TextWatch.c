@@ -57,7 +57,7 @@ void makeAnimationsForLayer(Line *line, int delay)
 	TextLayer *current = line->currentLayer;
 	TextLayer *next = line->nextLayer;
 
-	// Destroy old animations 
+	// Destroy old animations
 	if (line->animation1 != NULL)
 	{
 		 property_animation_destroy(line->animation1);
@@ -181,11 +181,11 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
 	return numLines;
 }
 
-void time_to_lines(int hours, int minutes, char lines[NUM_LINES][BUFFER_SIZE], char format[])
+void time_to_lines(int hours, int minutes, int seconds, char lines[NUM_LINES][BUFFER_SIZE], char format[])
 {
 	int length = NUM_LINES * BUFFER_SIZE + 1;
 	char timeStr[length];
-	time_to_words(hours, minutes, timeStr, length);
+	time_to_words(hours, minutes, seconds, timeStr, length);
 	
 	// Empty all lines
 	for (int i = 0; i < NUM_LINES; i++)
@@ -240,7 +240,7 @@ void display_time(struct tm *t)
 	char textLine[NUM_LINES][BUFFER_SIZE];
 	char format[NUM_LINES];
 
-	time_to_lines(t->tm_hour, t->tm_min, textLine, format);
+	time_to_lines(t->tm_hour, t->tm_min, t->tm_sec, textLine, format);
 	
 	int nextNLines = configureLayersForText(textLine, format);
 
@@ -275,7 +275,7 @@ void display_initial_time(struct tm *t)
 	char textLine[NUM_LINES][BUFFER_SIZE];
 	char format[NUM_LINES];
 
-	time_to_lines(t->tm_hour, t->tm_min, textLine, format);
+	time_to_lines(t->tm_hour, t->tm_min, t->tm_sec, textLine, format);
 
 	// This configures the nextLayer for each line
 	currentNLines = configureLayersForText(textLine, format);
@@ -295,10 +295,10 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
   display_time(tick_time);
 }
 
-/** 
+/**
  * Debug methods. For quickly debugging enable debug macro on top to transform the watchface into
  * a standard app and you will be able to change the time with the up and down buttons
- */ 
+ */
 #if DEBUG
 
 void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
