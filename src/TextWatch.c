@@ -1,6 +1,6 @@
 #include <pebble.h>
 
-#include "num2words-en.h"
+#include "num2words.h"
 
 #define DEBUG 0
 
@@ -12,6 +12,7 @@
 
 #define INVERT_KEY 0
 #define TEXT_ALIGN_KEY 1
+#define LANGUAGE_KEY 2
 
 #define TEXT_ALIGN_CENTER 0
 #define TEXT_ALIGN_LEFT 1
@@ -33,6 +34,7 @@ static uint8_t sync_buffer[64];
 
 static int text_align = TEXT_ALIGN_CENTER;
 static bool invert = false;
+static Language lang = SV;
 
 static Window *window;
 
@@ -50,7 +52,6 @@ static InverterLayer *inverter_layer;
 
 static struct tm *t;
 
-static int currentMinutes;
 static int currentNLines;
 
 // Animation handler
@@ -214,7 +215,7 @@ static void time_to_lines(int hours, int minutes, int seconds, char lines[NUM_LI
 {
 	int length = NUM_LINES * BUFFER_SIZE + 1;
 	char timeStr[length];
-	time_to_words(hours, minutes, seconds, timeStr, length);
+	time_to_words(lang, hours, minutes, seconds, timeStr, length);
 	
 	// Empty all lines
 	for (int i = 0; i < NUM_LINES; i++)
@@ -321,7 +322,8 @@ static void display_initial_time(struct tm *t)
 // Time handler called every minute by the system
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {
-  display_time(tick_time);
+	t = tick_time;
+	display_time(tick_time);
 }
 
 /**
@@ -385,7 +387,9 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 	switch (key) {
 		case TEXT_ALIGN_KEY:
 			text_align = new_tuple->value->uint8;
+			persist_write_int(TEXT_ALIGN_KEY, text_align);
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "Set text alignment: %u", text_align);
+
 			alignment = lookup_text_alignment(text_align);
 			for (int i = 0; i < NUM_LINES; i++)
 			{
@@ -394,15 +398,24 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 				layer_mark_dirty(text_layer_get_layer(lines[i].currentLayer));
 				layer_mark_dirty(text_layer_get_layer(lines[i].nextLayer));
 			}
-			persist_write_int(TEXT_ALIGN_KEY, text_align);
 			break;
 		case INVERT_KEY:
 			invert = new_tuple->value->uint8 == 1;
+			persist_write_bool(INVERT_KEY, invert);
 			APP_LOG(APP_LOG_LEVEL_DEBUG, "Set invert: %u", invert ? 1 : 0);
+
 			layer_set_hidden(inverter_layer_get_layer(inverter_layer), !invert);
 			layer_mark_dirty(inverter_layer_get_layer(inverter_layer));
-			persist_write_bool(INVERT_KEY, invert);
 			break;
+		case LANGUAGE_KEY:
+			lang = (Language) new_tuple->value->uint8;
+			persist_write_int(LANGUAGE_KEY, lang);
+			APP_LOG(APP_LOG_LEVEL_DEBUG, "Set language: %u", lang);
+
+			if (t)
+			{
+				display_time(t);
+			}
 	}
 }
 
@@ -460,7 +473,8 @@ static void window_load(Window *window)
 
 	Tuplet initial_values[] = {
 		TupletInteger(TEXT_ALIGN_KEY, (uint8_t) text_align),
-		TupletInteger(INVERT_KEY,     (uint8_t) invert ? 1 : 0)
+		TupletInteger(INVERT_KEY,     (uint8_t) invert ? 1 : 0),
+		TupletInteger(LANGUAGE_KEY,   (uint8_t) lang)
 	};
 
 	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
@@ -490,6 +504,11 @@ static void handle_init() {
 	{
 		invert = persist_read_bool(INVERT_KEY);
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Read invert from store: %u", invert ? 1 : 0);
+	}
+	if (persist_exists(LANGUAGE_KEY))
+	{
+		lang = (Language) persist_read_int(LANGUAGE_KEY);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Read language from store: %u", lang);
 	}
 
 	window = window_create();

@@ -4,6 +4,11 @@ var alignments = {
   right:  2
 };
 
+var langs = {
+  en: 0,
+  sv: 1
+};
+
 function onReady(event) {}
 
 function showConfiguration(event) {
@@ -15,7 +20,9 @@ function webviewclosed(event) {
   console.log('configuration response: '+ event.response + ' ('+ typeof event.response +')');
 
   var options = JSON.parse(decodeURIComponent(event.response));
-  if (typeof options.invert === 'undefined' && typeof options.text_align === 'undefined') {
+  if (typeof options.invert === 'undefined' &&
+      typeof options.text_align === 'undefined' &&
+      typeof options.lang === 'undefined') {
     return;
   }
 
@@ -23,7 +30,8 @@ function webviewclosed(event) {
 
   var message = {
     "0": options.invert ? 1 : 0,
-    "1": alignments[options.text_align]
+    "1": alignments[options.text_align],
+    "2": langs[options.lang]
   };
 
   console.log('sending message: '+ JSON.stringify(message));
