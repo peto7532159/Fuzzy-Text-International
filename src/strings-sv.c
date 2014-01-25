@@ -18,7 +18,7 @@ const char* const HOURS_SV[] = {
 const char* const RELS_SV[] = {
   "",
   "fem över ",
-  "ten över ",
+  "tio över ",
   "kvart över ",
   "tjugo över ",
   "tjugo fem över ",
@@ -26,6 +26,6 @@ const char* const RELS_SV[] = {
   "tjugo fem i ",
   "tjugo i ",
   "kvart i ",
-  "ten i ",
+  "tio i ",
   "fem i "
 };
