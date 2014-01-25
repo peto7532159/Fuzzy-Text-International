@@ -10,8 +10,12 @@
 #define ROW_HEIGHT 37
 #define TOP_MARGIN 10
 
-// Text alignment. Can be GTextAlignmentLeft, GTextAlignmentCenter or GTextAlignmentRight
-#define TEXT_ALIGN GTextAlignmentCenter
+#define INVERT_KEY 0
+#define TEXT_ALIGN_KEY 1
+
+#define TEXT_ALIGN_CENTER 0
+#define TEXT_ALIGN_LEFT 1
+#define TEXT_ALIGN_RIGHT 2
 
 // The time it takes for a layer to slide in or out.
 #define ANIMATION_DURATION 400
@@ -24,7 +28,13 @@
 // We can add a new word to a line if there are at least this many characters free after
 #define LINE_APPEND_LIMIT (LINE_LENGTH - LINE_APPEND_MARGIN)
 
-Window *window;
+static AppSync sync;
+static uint8_t sync_buffer[64];
+
+static int text_align = TEXT_ALIGN_CENTER;
+static bool invert = false;
+
+static Window *window;
 
 typedef struct {
 	TextLayer *currentLayer;
@@ -35,15 +45,16 @@ typedef struct {
 	PropertyAnimation *animation2;
 } Line;
 
-Line lines[NUM_LINES];
+static Line lines[NUM_LINES];
+static InverterLayer *inverter_layer;
 
-struct tm *t;
+static struct tm *t;
 
-int currentMinutes;
-int currentNLines;
+static int currentMinutes;
+static int currentNLines;
 
 // Animation handler
-void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
+static void animationStoppedHandler(struct Animation *animation, bool finished, void *context)
 {
 	TextLayer *current = (TextLayer *)context;
 	GRect rect = layer_get_frame((Layer *)current);
@@ -52,7 +63,7 @@ void animationStoppedHandler(struct Animation *animation, bool finished, void *c
 }
 
 // Animate line
-void makeAnimationsForLayer(Line *line, int delay)
+static void makeAnimationsForLayer(Line *line, int delay)
 {
 	TextLayer *current = line->currentLayer;
 	TextLayer *next = line->nextLayer;
@@ -93,7 +104,7 @@ void makeAnimationsForLayer(Line *line, int delay)
 	animation_schedule(&line->animation2->animation);	
 }
 
-void updateLayerText(TextLayer* layer, char* text)
+static void updateLayerText(TextLayer* layer, char* text)
 {
 	const char* layerText = text_layer_get_text(layer);
 	strcpy((char*)layerText, text);
@@ -103,7 +114,7 @@ void updateLayerText(TextLayer* layer, char* text)
 }
 
 // Update line
-void updateLineTo(Line *line, char *value, int delay)
+static void updateLineTo(Line *line, char *value, int delay)
 {
 	updateLayerText(line->nextLayer, value);
 	makeAnimationsForLayer(line, delay);
@@ -115,7 +126,7 @@ void updateLineTo(Line *line, char *value, int delay)
 }
 
 // Check to see if the current line needs to be updated
-bool needToUpdateLine(Line *line, char *nextValue)
+static bool needToUpdateLine(Line *line, char *nextValue)
 {
 	const char *currentStr = text_layer_get_text(line->currentLayer);
 
@@ -125,26 +136,48 @@ bool needToUpdateLine(Line *line, char *nextValue)
 	return false;
 }
 
+static GTextAlignment lookup_text_alignment(int align_key)
+{
+	GTextAlignment alignment;
+	switch (align_key)
+	{
+		case TEXT_ALIGN_LEFT:
+			alignment = GTextAlignmentLeft;
+			break;
+		case TEXT_ALIGN_RIGHT:
+			alignment = GTextAlignmentRight;
+			break;
+		default:
+			alignment = GTextAlignmentCenter;
+			break;
+	}
+	return alignment;
+}
+
 // Configure bold line of text
-void configureBoldLayer(TextLayer *textlayer)
+static void configureBoldLayer(TextLayer *textlayer)
 {
 	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
+
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Alignment for bold layer: %u", text_align);
+	text_layer_set_text_alignment(textlayer, lookup_text_alignment(text_align));
 }
 
 // Configure light line of text
-void configureLightLayer(TextLayer *textlayer)
+static void configureLightLayer(TextLayer *textlayer)
 {
 	text_layer_set_font(textlayer, fonts_get_system_font(FONT_KEY_BITHAM_42_LIGHT));
 	text_layer_set_text_color(textlayer, GColorWhite);
 	text_layer_set_background_color(textlayer, GColorClear);
-	text_layer_set_text_alignment(textlayer, TEXT_ALIGN);
+
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "Alignment for light layer: %u", text_align);
+	text_layer_set_text_alignment(textlayer, lookup_text_alignment(text_align));
 }
 
 // Configure the layers for the given text
-int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
+static int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
 {
 	int numLines = 0;
 
@@ -181,7 +214,7 @@ int configureLayersForText(char text[NUM_LINES][BUFFER_SIZE], char format[])
 	return numLines;
 }
 
-void time_to_lines(int hours, int minutes, int seconds, char lines[NUM_LINES][BUFFER_SIZE], char format[])
+static void time_to_lines(int hours, int minutes, int seconds, char lines[NUM_LINES][BUFFER_SIZE], char format[])
 {
 	int length = NUM_LINES * BUFFER_SIZE + 1;
 	char timeStr[length];
@@ -234,7 +267,7 @@ void time_to_lines(int hours, int minutes, int seconds, char lines[NUM_LINES][BU
 }
 
 // Update screen based on new time
-void display_time(struct tm *t)
+static void display_time(struct tm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
@@ -255,7 +288,7 @@ void display_time(struct tm *t)
 	currentNLines = nextNLines;
 }
 
-void initLineForStart(Line* line)
+static void initLineForStart(Line* line)
 {
 	// Switch current and next layer
 	TextLayer* tmp  = line->currentLayer;
@@ -269,7 +302,7 @@ void initLineForStart(Line* line)
 }
 
 // Update screen without animation first time we start the watchface
-void display_initial_time(struct tm *t)
+static void display_initial_time(struct tm *t)
 {
 	// The current time text will be stored in the following strings
 	char textLine[NUM_LINES][BUFFER_SIZE];
@@ -290,7 +323,7 @@ void display_initial_time(struct tm *t)
 }
 
 // Time handler called every minute by the system
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
+static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
 {
   display_time(tick_time);
 }
@@ -301,7 +334,7 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed)
  */
 #if DEBUG
 
-void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
@@ -318,7 +351,7 @@ void up_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 }
 
 
-void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
+static void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	(void)recognizer;
 	(void)window;
 	
@@ -334,7 +367,7 @@ void down_single_click_handler(ClickRecognizerRef recognizer, Window *window) {
 	display_time(t);
 }
 
-void click_config_provider(ClickConfig **config, Window *window) {
+static void click_config_provider(ClickConfig **config, Window *window) {
   (void)window;
 
   config[BUTTON_ID_UP]->click.handler = (ClickHandler) up_single_click_handler;
@@ -346,7 +379,38 @@ void click_config_provider(ClickConfig **config, Window *window) {
 
 #endif
 
-void init_line(Line* line)
+static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context)
+{
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
+}
+
+static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
+	GTextAlignment alignment;
+	switch (key) {
+		case TEXT_ALIGN_KEY:
+			text_align = new_tuple->value->uint8;
+			APP_LOG(APP_LOG_LEVEL_DEBUG, "Set text alignment: %u", text_align);
+			alignment = lookup_text_alignment(text_align);
+			for (int i = 0; i < NUM_LINES; i++)
+			{
+				text_layer_set_text_alignment(lines[i].currentLayer, alignment);
+				text_layer_set_text_alignment(lines[i].nextLayer, alignment);
+				layer_mark_dirty(text_layer_get_layer(lines[i].currentLayer));
+				layer_mark_dirty(text_layer_get_layer(lines[i].nextLayer));
+			}
+			persist_write_int(TEXT_ALIGN_KEY, text_align);
+			break;
+		case INVERT_KEY:
+			invert = new_tuple->value->uint8 == 1;
+			APP_LOG(APP_LOG_LEVEL_DEBUG, "Set invert: %u", invert ? 1 : 0);
+			layer_set_hidden(inverter_layer_get_layer(inverter_layer), !invert);
+			layer_mark_dirty(inverter_layer_get_layer(inverter_layer));
+			persist_write_bool(INVERT_KEY, invert);
+			break;
+	}
+}
+
+static void init_line(Line* line)
 {
 	// Create layers with dummy position to the right of the screen
 	line->currentLayer = text_layer_create(GRect(144, 0, 144, 50));
@@ -367,18 +431,29 @@ void init_line(Line* line)
 	line->animation2 = NULL;
 }
 
-void handle_init() {
-	window = window_create();
-	window_stack_push(window, true);
-	window_set_background_color(window, GColorBlack);
+static void destroy_line(Line* line)
+{
+	// Free layers
+	text_layer_destroy(line->currentLayer);
+	text_layer_destroy(line->nextLayer);
+}
+
+static void window_load(Window *window)
+{
+	Layer *window_layer = window_get_root_layer(window);
+	GRect bounds = layer_get_frame(window_layer);
 
 	// Init and load lines
 	for (int i = 0; i < NUM_LINES; i++)
 	{
 		init_line(&lines[i]);
-	  	layer_add_child(window_get_root_layer(window), (Layer *)lines[i].currentLayer);
-		layer_add_child(window_get_root_layer(window), (Layer *)lines[i].nextLayer);
+		layer_add_child(window_layer, (Layer *)lines[i].currentLayer);
+		layer_add_child(window_layer, (Layer *)lines[i].nextLayer);
 	}
+
+	inverter_layer = inverter_layer_create(bounds);
+	layer_set_hidden(inverter_layer_get_layer(inverter_layer), !invert);
+	layer_add_child(window_layer, inverter_layer_get_layer(inverter_layer));
 
 	// Configure time on init
 	time_t raw_time;
@@ -386,6 +461,55 @@ void handle_init() {
 	time(&raw_time);
 	t = localtime(&raw_time);
 	display_initial_time(t);
+
+	Tuplet initial_values[] = {
+		TupletInteger(TEXT_ALIGN_KEY, (uint8_t) text_align),
+		TupletInteger(INVERT_KEY,     (uint8_t) invert ? 1 : 0)
+	};
+
+	app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
+			sync_tuple_changed_callback, sync_error_callback, NULL);
+}
+
+static void window_unload(Window *window)
+{
+	app_sync_deinit(&sync);
+
+	// Free layers
+	inverter_layer_destroy(inverter_layer);
+	for (int i = 0; i < NUM_LINES; i++)
+	{
+		destroy_line(&lines[i]);
+	}
+}
+
+static void handle_init() {
+	// Load settings from persistent storage
+	if (persist_exists(TEXT_ALIGN_KEY))
+	{
+		text_align = persist_read_int(TEXT_ALIGN_KEY);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Read text alignment from store: %u", text_align);
+	}
+	if (persist_exists(INVERT_KEY))
+	{
+		invert = persist_read_bool(INVERT_KEY);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Read invert from store: %u", invert ? 1 : 0);
+	}
+
+	window = window_create();
+	window_set_background_color(window, GColorBlack);
+	window_set_window_handlers(window, (WindowHandlers) {
+		.load = window_load,
+		.unload = window_unload
+	});
+
+	// Initialize message queue
+	const int inbound_size = 64;
+	const int outbound_size = 64;
+	app_message_open(inbound_size, outbound_size);
+
+	const bool animated = true;
+	window_stack_push(window, animated);
 
 	// Subscribe to minute ticks
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
@@ -396,21 +520,8 @@ void handle_init() {
 #endif
 }
 
-void destroy_line(Line* line)
+static void handle_deinit()
 {
-	// Free layers
-	text_layer_destroy(line->currentLayer);
-	text_layer_destroy(line->nextLayer);
-}
-
-void handle_deinit()
-{
-	// Free lines
-	for (int i = 0; i < NUM_LINES; i++)
-	{
-		destroy_line(&lines[i]);
-	}
-
 	// Free window
 	window_destroy(window);
 }
