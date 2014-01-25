@@ -20,7 +20,14 @@ void time_to_words(Language lang, int hours, int minutes, int seconds, char* wor
   // into five minute intervals.
   int half_mins  = (2 * minutes) + (seconds / 30);
   int rel_index  = ((half_mins + 5) / (2 * 5)) % 12;
-  int hour_index = rel_index < 7 ? hours % 12 : (hours + 1) % 12;
+  int hour_index;
+
+  if (rel_index > 6 || (rel_index == 0 && minutes > 30)) {
+    hour_index = (hours + 1) % 12;
+  }
+  else {
+    hour_index = hours % 12;
+  }
 
   const char* hour = lang == EN ? HOURS_EN[hour_index] : HOURS_SV[hour_index];
   const char* rel  = lang == EN ? RELS_EN[rel_index]   : RELS_SV[rel_index];
