@@ -7,13 +7,20 @@ var alignments = {
 function onReady(event) {}
 
 function showConfiguration(event) {
-  Pebble.openURL("http://sitr.us/apps/fuzzy-text/configurable.html");
+  var opts = localStorage.getItem("options") || encodeURIComponent("{}");
+  Pebble.openURL("http://sitr.us/apps/fuzzy-text/configurable.html#options="+opts);
 }
 
 function webviewclosed(event) {
   console.log('configuration response: '+ event.response + ' ('+ typeof event.response +')');
 
   var options = JSON.parse(decodeURIComponent(event.response));
+  if (typeof options.invert === 'undefined' && typeof options.text_align === 'undefined') {
+    return;
+  }
+
+  localStorage.setItem("options", event.response);
+
   var message = {
     "0": options.invert ? 1 : 0,
     "1": alignments[options.text_align]
