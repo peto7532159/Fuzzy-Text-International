@@ -34,7 +34,7 @@ static uint8_t sync_buffer[64];
 
 static int text_align = TEXT_ALIGN_CENTER;
 static bool invert = false;
-static Language lang = SV;
+static Language lang = EN;
 
 static Window *window;
 

@@ -2,7 +2,7 @@
 
 const char* const HOURS_EN[] = {
   // AM hours
-  "midnight",
+  "twelve",
   "one",
   "two",
   "three",
@@ -30,20 +30,25 @@ const char* const HOURS_EN[] = {
   "eleven"
 };
 
-// The "%" character will be replaced with the hour.  A "*" before
-// a word makes it bold.
+/**
+ * The string "$1" will be replaced with the current hour (e.g., "three"
+ * at 3:45).  The string "$2" will be replaced with the *next* hour
+ * (e.g., "four" at 3:45).
+ *
+ * A "*" character before a word makes that word bold.
+ */
 const char* const RELS_EN[] = {
-  "*% o'clock",
-  "five after *%",
-  "ten after *%",
-  "quarter after *%",
-  "twenty after *%",
-  "twenty five after *%",
-  "half past *%",
-  "twenty five to *%",
-  "twenty to *%",
-  "quarter to *%",
-  "ten to *%",
-  "five to *%"
+  "*$1 o'clock",
+  "five after *$1",
+  "ten after *$1",
+  "quarter after *$1",
+  "twenty after *$1",
+  "twenty five after *$1",
+  "half past *$1",
+  "twenty five to *$2",
+  "twenty to *$2",
+  "quarter to *$2",
+  "ten to *$2",
+  "five to *$2"
 };
 

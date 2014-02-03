@@ -30,19 +30,24 @@ const char* const HOURS_SV[] = {
   "elva"
 };
 
-// The "%" character will be replaced with the hour.  A "*" before
-// a word makes it bold.
+/**
+ * The string "$1" will be replaced with the current hour (e.g., "three"
+ * at 3:45).  The string "$2" will be replaced with the *next* hour
+ * (e.g., "four" at 3:45).
+ *
+ * A "*" character before a word makes that word bold.
+ */
 const char* const RELS_SV[] = {
-  "%",
-  "fem över *%",
-  "tio över *%",
-  "kvart över *%",
-  "tjugo över *%",
-  "tjugo fem över *%",
-  "halv över *%",
-  "tjugo fem i *%",
-  "tjugo i *%",
-  "kvart i *%",
-  "tio i *%",
-  "fem i *%"
+  "$1",
+  "fem över *$1",
+  "tio över *$1",
+  "kvart över *$1",
+  "tjugo över *$1",
+  "tjugo fem över *$1",
+  "halv över *$1",
+  "tjugo fem i *$2",
+  "tjugo i *$2",
+  "kvart i *$2",
+  "tio i *$2",
+  "fem i *$2"
 };
