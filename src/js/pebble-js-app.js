@@ -41,8 +41,8 @@ function webviewclosed(event) {
 }
 
 function logError(event) {
-    console.log('Unable to deliver message with transactionId='+
-                event.data.transactionId +' ; Error is'+ event.error.message);
+  console.log('Unable to deliver message with transactionId='+
+              event.data.transactionId +' ; Error is'+ event.error.message);
 }
 
 Pebble.addEventListener("ready", onReady);
