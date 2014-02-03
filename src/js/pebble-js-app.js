@@ -10,7 +10,8 @@ var alignments = {
 var langs = {
   de: 0,
   en: 1,
-  sv: 2
+  es: 2,
+  sv: 3
 };
 
 function readyCallback(event) {
