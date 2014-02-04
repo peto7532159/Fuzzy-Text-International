@@ -2,13 +2,13 @@ Fuzzy Text International
 ========================
 
 This is a watchface for the [Pebble][].  It is originally based on the
-[PebbleTextWatch][] by waerewip , which reproduced the look of the Text
-Watch that comes standard with the Pebble.
+[PebbleTextWatch][] by Mihai Dumitrache, which reproduced the look of
+the Text Watch that comes standard with the Pebble.
 
 [Pebble]: https://getpebble.com/
 [PebbleTextWatch]: https://github.com/wearewip/PebbleTextWatch
 
-Mattias Backlund created a modified version, [Swedish fuzzy text
+Mattias Bäcklund created a modified version, [Swedish fuzzy text
 watch][], that displays fuzzy time.  Mattias wanted to combine the
 elegant layout and animations of the Text Watch with the natural
 language of the Fuzzy Time watchface, and wanted it in his native
@@ -16,7 +16,7 @@ language, Swedish.
 
 [Swedish fuzzy text watch]: https://github.com/Sarastro72/Swedish-Fuzzy-Text-watch
 
-This version builds upon the work by waerewip and Mattias: it supports
+This version builds upon the work by Mihai and Mattias: it supports
 multiple languages, and provides options to change the visual style.
 
 Features:
@@ -39,8 +39,25 @@ At this time the included languages are:
 - English
 - French
 - German
+- Norwegian
 - Spanish
 - Swedish
+
+
+Authors
+-------
+
+Thanks to all of the people who made this watchface possible:
+
+- [Mihai Dumitrache][Mihai], implemented an open source version of Text Watch
+- [Mattias Bäcklund][Mattias], created Swedish fuzzy text watch
+- [Jesse Hallett][Jesse], added configuration options and multiple language support
+- [iFlips][], provided Norwegian translation
+
+[Mihai]: https://github.com/mmdumi
+[Mattias]: https://github.com/Sarastro72
+[Jesse]: https://github.com/hallettj
+[iFlips]: https://github.com/iFlips
 
 
 Contributing
