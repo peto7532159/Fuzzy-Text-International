@@ -52,7 +52,7 @@ Thanks to all of the people who made this watchface possible:
 - [Mihai Dumitrache][Mihai], implemented an open source version of Text Watch
 - [Mattias Bäcklund][Mattias], created Swedish fuzzy text watch
 - [Jesse Hallett][Jesse], added configuration options and multiple language support
-- [iFlips][], provided Norwegian translation
+- [Filip Horvei][iFlips], provided Norwegian translation
 
 [Mihai]: https://github.com/mmdumi
 [Mattias]: https://github.com/Sarastro72
