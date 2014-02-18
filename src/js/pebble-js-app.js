@@ -8,12 +8,13 @@ var alignments = {
 };
 
 var langs = {
-  de: 0,
-  en: 1,
-  es: 2,
-  fr: 3,
-  no: 4,
-  sv: 5
+  de:    0,
+  en_GB: 1,
+  en_US: 2,
+  es:    3,
+  fr:    4,
+  no:    5,
+  sv:    6
 };
 
 function readyCallback(event) {

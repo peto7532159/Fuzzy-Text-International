@@ -1,4 +1,4 @@
-#include "strings-en.h"
+#include "strings-fr.h"
 
 const char* const HOURS_FR[] = {
   // AM hours

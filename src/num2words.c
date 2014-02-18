@@ -1,6 +1,7 @@
 #include "num2words.h"
 #include "strings-de.h"
-#include "strings-en.h"
+#include "strings-en_GB.h"
+#include "strings-en_US.h"
 #include "strings-es.h"
 #include "strings-fr.h"
 #include "strings-no.h"
@@ -50,6 +51,9 @@ const char* get_hour(Language lang, int index) {
     case DE:
       return HOURS_DE[index];
       break;
+    case EN_GB:
+      return HOURS_EN_GB[index];
+      break;
     case ES:
       return HOURS_ES[index];
       break;
@@ -63,7 +67,7 @@ const char* get_hour(Language lang, int index) {
       return HOURS_SV[index];
       break;
     default:
-      return HOURS_EN[index];
+      return HOURS_EN_US[index];
   }
 }
 
@@ -71,6 +75,9 @@ const char* get_rel(Language lang, int index) {
   switch (lang) {
     case DE:
       return RELS_DE[index];
+      break;
+    case EN_GB:
+      return RELS_EN_GB[index];
       break;
     case ES:
       return RELS_ES[index];
@@ -85,7 +92,7 @@ const char* get_rel(Language lang, int index) {
       return RELS_SV[index];
       break;
     default:
-      return RELS_EN[index];
+      return RELS_EN_US[index];
   }
 }
 

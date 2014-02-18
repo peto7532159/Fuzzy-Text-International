@@ -1,6 +1,6 @@
-#include "strings-en.h"
+#include "strings-en_US.h"
 
-const char* const HOURS_EN[] = {
+const char* const HOURS_EN_US[] = {
   // AM hours
   "twelve",
   "one",
@@ -37,7 +37,7 @@ const char* const HOURS_EN[] = {
  *
  * A "*" character before a word makes that word bold.
  */
-const char* const RELS_EN[] = {
+const char* const RELS_EN_US[] = {
   "*$1 o'clock",
   "five after *$1",
   "ten after *$1",
