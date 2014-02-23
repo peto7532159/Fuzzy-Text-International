@@ -1,132 +1,191 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>Configure Fuzzy Text</title>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.css" />
-    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
-    <script src="http://code.jquery.com/mobile/1.3.2/jquery.mobile-1.3.2.min.js"></script>
-  </head>
-  <body>
-    <div data-role="page" id="main">
-      <div data-role="header" class="jqm-header">
-        <h1>Configure Fuzzy Text</h1>
-      </div>
+<!--[if lt IE 7 ]><html class="ie ie6" lang="en"> <![endif]-->
+<!--[if IE 7 ]><html class="ie ie7" lang="en"> <![endif]-->
+<!--[if IE 8 ]><html class="ie ie8" lang="en"> <![endif]-->
+<!--[if (gte IE 9)|!(IE)]><!--><html lang="en"> <!--<![endif]-->
+<head>
 
-      <div data-role="content">
-      <form id="config">
+	<!-- Basic Page Needs
+  ================================================== -->
+	<meta charset="utf-8">
+	<title>Configure Fuzzy Text</title>
+	<meta name="description" content="configuration page for Fuzzy Text International, a Pebble watchface">
+	<meta name="author" content="Jesse Hallett <jesse@sitr.us>">
 
-        <div data-role="fieldcontain">
-          <label for="invert">Invert colors:</label>
-          <select name="invert" id="invert" data-role="slider">
-            <option value="off">Off</option>
-            <option value="on">On</option>
-          </select>
-        </div>
+	<!-- Mobile Specific Metas
+  ================================================== -->
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 
-        <div data-role="fieldcontain">
-          <fieldset data-role="controlgroup">
-            <legend>Text align:</legend>
-            <input type="radio" name="align" value="center" id="align-center" checked="checked" class="custom" />
-            <label for="align-center">center</label>
+	<!-- CSS
+  ================================================== -->
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css">
 
-            <input type="radio" name="align" value="left" id="align-left" class="custom" />
-            <label for="align-left">left</label>
+	<!--[if lt IE 9]>
+		<script src="http://html5shim.googlecode.com/svn/trunk/html5.js"></script>
+	<![endif]-->
 
-            <input type="radio" name="align" value="right" id="align-right" class="custom" />
-            <label for="align-right">right</label>
-          </fieldset>
-        </div>
+</head>
+<body>
 
-        <div data-role="fieldcontain">
-          <fieldset data-role="controlgroup">
-            <legend>Language:</legend>
-            <input type="radio" name="lang" value="de" id="lang-de" class="custom" />
-            <label for="lang-de">Deutsch</label>
+	<!-- Primary Page Layout
+	================================================== -->
 
-            <input type="radio" name="lang" value="en_GB" id="lang-en_GB" checked="checked" class="custom" />
-            <label for="lang-en_GB">English (Great Britain)</label>
+	<div class="container">
+		<header>
+			<h1>Configure Fuzzy Text Int'l</h1>
+		</header>
 
-            <input type="radio" name="lang" value="en_US" id="lang-en_US" checked="checked" class="custom" />
-            <label for="lang-en_US">English (United States)</label>
+		<form id="config" role="form" class="input-lg">
 
-            <input type="radio" name="lang" value="es" id="lang-es" class="custom" />
-            <label for="lang-es">Español</label>
+			<fieldset>
+				<legend>Colors:</legend>
+				<div class="checkbox">
+					<label>
+						<input type="checkbox" name="invert" value="on" />
+						invert colors
+					</label>
+				</div>
+			</fieldset>
 
-            <input type="radio" name="lang" value="fr" id="lang-fr" class="custom" />
-            <label for="lang-fr">Français</label>
+			<fieldset>
+				<legend>Text align:</legend>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="align" value="left" />
+						left
+					</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="align" value="center" checked />
+						center
+					</label>
+				</div>
+				<div class="radio-inline">
+					<label>
+						<input type="radio" name="align" value="right" />
+						right
+					</label>
+				</div>
+			</fieldset>
 
-            <input type="radio" name="lang" value="no" id="lang-no" class="custom" />
-            <label for="lang-no">Norsk</label>
+			<fieldset>
+				<legend>Language:</legend>
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="de" />
+						Deutsch
+					</label>
+				</div>
 
-            <input type="radio" name="lang" value="sv" id="lang-sv" class="custom" />
-            <label for="lang-sv">Svenska</label>
-          </fieldset>
-        </div>
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="en_GB" />
+						English (Great Britain)
+					</label>
+				</div>
 
-        <div class="ui-body ui-body-b">
-          <fieldset class="ui-grid-a">
-              <div class="ui-block-a"><button type="submit" data-theme="d" id="b-cancel">Cancel</button></div>
-              <div class="ui-block-b"><button type="submit" data-theme="a" id="b-submit">Save</button></div>
-          </fieldset>
-        </div>
-      </form>
-      </div>
-    </div>
-    <script>
-      function saveOptions() {
-        var params = {};
-        $('#config').serializeArray().forEach(function(pair) {
-          params[pair.name] = pair.value;
-        });
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="en_US" checked />
+						English (United States)
+					</label>
+				</div>
 
-        var options = {
-          invert:     params.invert === 'on',
-          text_align: params.align || 'center',
-          lang:       params.lang
-        }
-        return options;
-      }
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="es" />
+						Español
+					</label>
+				</div>
 
-      function applyOptions() {
-        var params = window.location.hash;
-        var opts;
-        params.replace(/(?:^|[#&])options=([^&]*)/, function(_, json) {
-            opts = JSON.parse(decodeURIComponent(json));
-        });
-        if (opts && opts.invert) {
-          $("#invert").val('on').slider('refresh');
-        }
-        if (opts && opts.text_align) {
-          $(document.getElementById('align-'+ opts.text_align))
-            .prop('checked', true)
-          $('[name="align"]').checkboxradio('refresh');
-        }
-        if (opts && opts.lang) {
-          $(document.getElementById('lang-'+ opts.lang))
-            .prop('checked', true)
-          $('[name="lang"]').checkboxradio('refresh');
-        }
-      }
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="fr" />
+						Français
+					</label>
+				</div>
 
-      $().ready(function() {
-        $("#b-cancel").click(function() {
-          console.log("Cancel");
-          document.location = "pebblejs://close";
-        });
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="no" />
+						Norsk
+					</label>
+				</div>
 
-        $("#b-submit").click(function() {
-          console.log("Submit");
+				<div class="radio">
+					<label>
+						<input type="radio" name="lang" value="sv" />
+						Svenska
+					</label>
+				</div>
+			</fieldset>
 
-          var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(saveOptions()));
-          console.log("Warping to: " + location);
-          console.log(location);
-          document.location = location;
-        });
+			<fieldset>
+				<a href="pebblejs://close" class="btn btn-lg btn-default" role="button">Cancel</a>
+				<button type="button" class="btn btn-lg btn-primary" id="b-submit">Save</button>
+			</fieldset>
+		</form>
 
-        applyOptions();
-      });
-    </script>
-  </body>
+	</div><!-- container -->
+
+<!-- End Document
+================================================== -->
+
+	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
+	<script>
+		function saveOptions() {
+			var params = {};
+			$('#config').serializeArray().forEach(function(pair) {
+				params[pair.name] = pair.value;
+			});
+
+			var options = {
+				invert:		params.invert === 'on',
+				text_align:	params.align || 'center',
+				lang:		params.lang
+			}
+			return options;
+		}
+
+		function applyOptions() {
+			var $form	= $('#config');
+			var opts	= getParam('options');
+			if (opts && opts.invert) {
+				$form.find('[name="invert"]').prop('checked', true);
+			}
+			if (opts && opts.text_align) {
+				$form.find('[name="align"]').filter(function(btn) {
+					return btn.value === opts.text_align;
+				}).prop('checked', true);
+			}
+			if (opts && opts.lang) {
+				$form.find('[name="align"]').filter(function(btn) {
+					return btn.value === opts.text_align;
+				}).prop('checked', true);
+			}
+		}
+
+		function getParam(key) {
+			var params = window.location.hash;
+			var val;
+			params.replace(/(?:^|[#&])([a-z]+)=([^&]*)/i, function(_, k, v) {
+				if (key === k) {
+					val = decodeURIComponent(v);
+				}
+			});
+			return val;
+		}
+
+		$().ready(function() {
+			$("#b-submit").click(function() {
+				var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(saveOptions()));
+				document.location = location;
+			});
+
+			applyOptions();
+		});
+   </script>
+
+</body>
 </html>
