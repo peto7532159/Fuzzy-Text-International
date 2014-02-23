@@ -34,6 +34,18 @@
 		<header>
 			<h1>Configure Fuzzy Text Int'l</h1>
 		</header>
+		
+		<div id="update-available" class="hidden bg-danger" style="padding:0.75em">
+			<p>There is a new version of Fuzzy Text International
+			available - some settings will not work until you update to
+			the new version. <a href="CHANGES.html">See
+			details</a></p>
+		</div>
+
+		<div id="up-to-date" class="hidden bg-info" style="padding:0.75em">
+			<p>Your version of Fuzzy Text International is up-to-date.
+			<a href="CHANGES.html">See changes</a></p>
+		</div>
 
 		<form id="config" role="form" class="input-lg">
 
@@ -134,6 +146,8 @@
 
 	<script src="http://code.jquery.com/jquery-1.11.0.min.js"></script>
 	<script>
+		var LATEST = "1.2.0";
+
 		function saveOptions() {
 			var params = {};
 			$('#config').serializeArray().forEach(function(pair) {
@@ -169,7 +183,7 @@
 		function getParam(key) {
 			var params = window.location.hash;
 			var val;
-			params.replace(/(?:^|[#&])([a-z]+)=([^&]*)/i, function(_, k, v) {
+			params.replace(/(?:^|[#&])([a-z]+)=([^&]+)/i, function(_, k, v) {
 				if (key === k) {
 					val = decodeURIComponent(v);
 				}
@@ -177,14 +191,27 @@
 			return val;
 		}
 
-		$().ready(function() {
-			$("#b-submit").click(function() {
-				var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(saveOptions()));
-				document.location = location;
-			});
+		function parseVersion(verStr) {
+			var parts = verStr.split('.');
+			return parts.reduce(function(sum, part) {
+				return (sum * 1000) + parseInt(part, 10);
+			}, 0);
+		}
 
-			applyOptions();
+		$("#b-submit").click(function() {
+			var location = "pebblejs://close#" + encodeURIComponent(JSON.stringify(saveOptions()));
+			document.location = location;
 		});
+
+		applyOptions();
+
+		var version = getParam('v');
+		if (!version || (parseVersion(version) < parseVersion(LATEST))) {
+			$('#update-available').removeClass('hidden');
+		}
+		else {
+			$('#up-to-date').removeClass('hidden');
+		}
    </script>
 
 </body>
