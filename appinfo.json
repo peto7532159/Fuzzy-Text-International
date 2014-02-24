@@ -3,8 +3,8 @@
   "shortName": "Fuzzy Text Int'l",
   "longName": "Fuzzy Text International",
   "companyName": "Jesse Hallett",
-  "versionCode": 3,
-  "versionLabel": "1.2.0",
+  "versionCode": 4,
+  "versionLabel": "1.2.1",
   "watchapp": {
     "watchface": true
   },
