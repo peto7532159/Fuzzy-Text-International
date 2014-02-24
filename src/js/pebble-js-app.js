@@ -32,14 +32,15 @@ function showConfiguration(event) {
   onReady(function() {
     var opts = getOptions();
     var url  = "http://static.sitr.us.s3-website-us-west-2.amazonaws.com/configure-fuzzy-text.html";
-    Pebble.openURL(url + "#v=" + VERSION + "&options=" + opts);
+    Pebble.openURL(url + "#v=" + encodeURIComponent(VERSION) + "&options=" + encodeURIComponent(opts));
   });
 }
 
 function webviewclosed(event) {
-  console.log('configuration response: '+ event.response + ' ('+ typeof event.response +')');
+  var resp = event.response;
+  console.log('configuration response: '+ resp + ' ('+ typeof resp +')');
 
-  var options = JSON.parse(decodeURIComponent(event.response));
+  var options = JSON.parse(resp);
   if (typeof options.invert === 'undefined' &&
       typeof options.text_align === 'undefined' &&
       typeof options.lang === 'undefined') {
@@ -47,17 +48,16 @@ function webviewclosed(event) {
   }
 
   onReady(function() {
-    setOptions(event.response);
+    setOptions(resp);
 
-    var message = prepareConfiguration(event.response);
+    var message = prepareConfiguration(resp);
     transmitConfiguration(message);
-
   });
 }
 
 // Retrieves stored configuration from localStorage.
 function getOptions() {
-  return localStorage.getItem("options") || encodeURIComponent("{}");
+  return localStorage.getItem("options") || ("{}");
 }
 
 // Stores options in localStorage.
@@ -69,7 +69,7 @@ function setOptions(options) {
 // format that is sent back from the configuration web UI.  Produces
 // a JSON message to send to the watch face.
 function prepareConfiguration(serialized_settings) {
-  var settings = JSON.parse(decodeURIComponent(serialized_settings));
+  var settings = JSON.parse(serialized_settings);
   return {
     "0": settings.invert ? 1 : 0,
     "1": alignments[settings.text_align],
