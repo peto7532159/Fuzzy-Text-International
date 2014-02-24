@@ -53,6 +53,7 @@ Thanks to all of the people who made this watchface possible:
 - [Mattias Bäcklund][Mattias], created Swedish fuzzy text watch
 - [Jesse Hallett][Jesse], added configuration options and multiple language support
 - [Filip Horvei][iFlips], provided Norwegian translation
+- Tomi De Lucca, discovered fix for a severe iOS bug & assisted with Spanish translation
 
 [Mihai]: https://github.com/mmdumi
 [Mattias]: https://github.com/Sarastro72

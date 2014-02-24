@@ -38,14 +38,14 @@ const char* const HOURS_ES[] = {
  * A "*" character before a word makes that word bold.
  */
 const char* const RELS_ES[] = {
-  "$1",
+  "*$1 en punto",
   "*$1 y cinco",
   "*$1 y diez",
   "*$1 y cuarto",
   "*$1 y veinte",
-  "*$1 y veinte- cinco",
+  "*$1 y veinti- cinco",
   "*$1 y media",
-  "*$2 menos veinte- cinco",
+  "*$2 menos veinti- cinco",
   "*$2 menos veinte",
   "*$2 menos cuarto",
   "*$2 menos diez",
