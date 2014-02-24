@@ -164,18 +164,18 @@
 
 		function applyOptions() {
 			var $form	= $('#config');
-			var opts	= getParam('options');
+			var opts	= JSON.parse(getParam('options'));
 			if (opts && opts.invert) {
 				$form.find('[name="invert"]').prop('checked', true);
 			}
 			if (opts && opts.text_align) {
-				$form.find('[name="align"]').filter(function(btn) {
+				$form.find('[name="align"]').filter(function(i, btn) {
 					return btn.value === opts.text_align;
 				}).prop('checked', true);
 			}
 			if (opts && opts.lang) {
-				$form.find('[name="align"]').filter(function(btn) {
-					return btn.value === opts.text_align;
+				$form.find('[name="lang"]').filter(function(i, btn) {
+					return btn.value === opts.lang;
 				}).prop('checked', true);
 			}
 		}
@@ -183,7 +183,7 @@
 		function getParam(key) {
 			var params = window.location.hash;
 			var val;
-			params.replace(/(?:^|[#&])([a-z]+)=([^&]+)/i, function(_, k, v) {
+			params.replace(/(?:^|[#&])([a-z]+)=([^&]+)/ig, function(_, k, v) {
 				if (key === k) {
 					val = decodeURIComponent(v);
 				}
@@ -203,8 +203,6 @@
 			document.location = location;
 		});
 
-		applyOptions();
-
 		var version = getParam('v');
 		if (!version || (parseVersion(version) < parseVersion(LATEST))) {
 			$('#update-available').removeClass('hidden');
@@ -212,6 +210,8 @@
 		else {
 			$('#up-to-date').removeClass('hidden');
 		}
+
+		applyOptions();
    </script>
 
 </body>
