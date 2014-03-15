@@ -78,7 +78,7 @@ const char* get_hour(Language lang, int index) {
 const char* get_rel(Language lang, int index) {
   switch (lang) {
     case CA:
-      return HOURS_CA[index];
+      return RELS_CA[index];
       break;
     case DE:
       return RELS_DE[index];
